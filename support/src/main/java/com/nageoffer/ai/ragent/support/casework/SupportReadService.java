@@ -45,6 +45,8 @@ public class SupportReadService {
                 "resourceRef", supportCase.resourceId(), "description", supportCase.description());
     }
 
+    public void authorize(SupportRunScope scope) { access.requireScope(scope); }
+
     public Map<String, Object> subscription(SupportRunScope scope) {
         requireScenario(scope, SupportCase.Scenario.SUBSCRIPTION_ACTIVATION);
         List<Map<String, Object>> rows = jdbc.query("""
