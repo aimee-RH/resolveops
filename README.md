@@ -1,3 +1,5 @@
+> **ResolveOps development fork:** SaaS support investigation and approval-controlled repair, built on Ragent. See [scope and development gates](docs/resolveops/README.md). This project is in development; the original upstream documentation follows.
+
 <p align="center">
   <a href="https://github.com/nageoffer/ragent">
     <picture>

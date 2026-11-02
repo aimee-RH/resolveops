@@ -42,6 +42,11 @@ node_modules/
 dist/
 .vite/
 .env.local
+.env
+.env.*
+!.env.example
+/.resolveops/
+/eval/results/
 resources/docker/graphrag/.env
 
 ### Tmp Out ###
