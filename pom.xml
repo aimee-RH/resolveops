@@ -45,6 +45,7 @@
         <module>framework</module>
         <module>infra-ai</module>
         <module>system</module>
+        <module>support</module>
         <module>rag</module>
         <module>agent</module>
         <module>bootstrap</module>
