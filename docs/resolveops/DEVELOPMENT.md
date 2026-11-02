@@ -15,3 +15,11 @@ Integration tests start a native PostgreSQL 17.11 process through the test-only 
 ## Baseline probe
 
 The pinned upstream reactor compiled all eight original modules using Java 17 on 2026-11-02. The initial shell selected a different JAVA_HOME and failed with `release version 17 not supported`; selecting the required JDK fixed it. No upstream dependency versions were changed.
+
+## Workbench integration
+
+The page is at `/support`, with a link in the Agent sidebar. Use the existing Ragent login; do not introduce user/tenant headers or a fixed demo identity. Apply the support SQL upgrade to an initialized upstream database (new full initialization includes it). Create synthetic customer/case rows and grant only the intended tenant/role to an actual authenticated user ID. Tests create their own data and grant rows without changing real users.
+
+The optional Compose file is a business-domain database, not the complete upstream runtime. Live Ragent operation still needs its documented authentication/cache/storage configuration and pgvector for the support runbook adapter. This milestone verified module compilation, service/HTTP boundaries and frontend build, not a complete deployed login-to-model flow.
+
+No investigation start endpoint or business write endpoint is exposed in M1. Histories and evidence come from persisted records; the UI does not inject fixtures or simulate a model answer.
