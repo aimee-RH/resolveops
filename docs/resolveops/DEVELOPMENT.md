@@ -10,7 +10,7 @@ scripts/resolveops/check.sh -DskipTests compile
 
 The database binds only to localhost port 55432. Its documented default password is for this isolated local development database. Set `RESOLVEOPS_DB_PASSWORD` to override. Do not use it for shared deployments.
 
-PostgreSQL integration tests will require this database and create/drop their own randomly named schemas; they must not reset the upstream Ragent database. Real-model configuration is optional and remains deferred.
+Integration tests start a native PostgreSQL 17.11 process through the test-only [Zonky component](https://github.com/zonkyio/embedded-postgres), on a random port. This is real PostgreSQL, not H2. Set `RESOLVEOPS_TEST_DB_URL`, `RESOLVEOPS_TEST_DB_USER` and `RESOLVEOPS_TEST_DB_PASSWORD` to test an external database instead; an unavailable explicit database fails the tests. Each test creates/drops only its own random schema. Docker Compose remains available for the persistent development database. Real-model configuration is optional and remains deferred.
 
 ## Baseline probe
 
