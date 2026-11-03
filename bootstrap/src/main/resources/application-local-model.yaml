@@ -1,10 +1,14 @@
 # Generation only: database, authentication, storage and embeddings need separate setup.
+support:
+  investigation:
+    enabled: ${RESOLVEOPS_INVESTIGATION_ENABLED:false}
+
 agent:
   chat:
     provider: ollama
-    model: resolveops-qwen3:4b
+    model: ${RESOLVEOPS_LOCAL_MODEL:resolveops-qwen3:4b}
     temperature: 0
-    reasoning-effort: low
+    reasoning-effort: ${RESOLVEOPS_REASONING_EFFORT:low}
   mcp:
     servers: []
   max-iters: 4
@@ -27,7 +31,7 @@ ai:
     candidates:
       - id: resolveops-local
         provider: ollama
-        model: resolveops-qwen3:4b
+        model: ${RESOLVEOPS_LOCAL_MODEL:resolveops-qwen3:4b}
     tiers:
       fast:
         candidates: [resolveops-local]

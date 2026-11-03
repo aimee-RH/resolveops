@@ -11,6 +11,7 @@ if [[ -z "$ollama_bin" || ! -x "$ollama_bin" ]]; then
   exit 1
 fi
 export OLLAMA_HOST=127.0.0.1:11434
+model="${RESOLVEOPS_LOCAL_MODEL:-resolveops-qwen3:4b}"
 case "${1:-status}" in
   serve)
     export OLLAMA_MODELS="${RESOLVEOPS_OLLAMA_MODELS:-$task_root/work/ollama-models}"
@@ -23,11 +24,15 @@ case "${1:-status}" in
     "$ollama_bin" pull qwen3:4b
     exec "$ollama_bin" create resolveops-qwen3:4b -f "$repo_root/resources/ollama/Modelfile"
     ;;
+  setup-llama)
+    "$ollama_bin" pull llama3.2:3b
+    exec "$ollama_bin" create resolveops-llama:3b -f "$repo_root/resources/ollama/Modelfile.llama"
+    ;;
   status)
     "$ollama_bin" list
     exec "$ollama_bin" ps
     ;;
-  chat) shift; exec "$ollama_bin" run resolveops-qwen3:4b "$@" ;;
-  unload) exec "$ollama_bin" stop resolveops-qwen3:4b ;;
-  *) echo 'Usage: local-model.sh {serve|setup|status|chat|unload}' >&2; exit 2 ;;
+  chat) shift; exec "$ollama_bin" run "$model" "$@" ;;
+  unload) exec "$ollama_bin" stop "$model" ;;
+  *) echo 'Usage: local-model.sh {serve|setup|setup-llama|status|chat|unload}' >&2; exit 2 ;;
 esac
