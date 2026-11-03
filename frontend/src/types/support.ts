@@ -13,7 +13,15 @@ export interface SupportRun {
   caseId: string;
   actorId: string;
   status: string;
-  diagnosis: Record<string, unknown>;
+  diagnosis: {
+    outcome?: "PROPOSE_REPAIR" | "NO_ACTION_NEEDED" | "NEEDS_INFORMATION" | "HANDOFF";
+    facts?: { text: string; evidenceIds: string[] }[];
+    hypotheses?: string[];
+    missingInformation?: string[];
+    recommendedAction?: { type: string } | null;
+    runbookEvidenceIds?: string[];
+    error?: string;
+  };
   config: Record<string, unknown>;
   startedAt: string;
   finishedAt: string | null;
