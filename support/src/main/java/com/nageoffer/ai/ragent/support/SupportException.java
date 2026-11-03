@@ -20,7 +20,7 @@ package com.nageoffer.ai.ragent.support;
 public final class SupportException extends RuntimeException {
     public enum Code {
         INVALID_ARGUMENT(400), NOT_AUTHENTICATED(401), NOT_FOUND_OR_FORBIDDEN(404),
-        CONFLICT(409), CONFIGURATION_REQUIRED(503), UNAVAILABLE(503);
+        CONFLICT(409), INVALID_DIAGNOSIS(422), CONFIGURATION_REQUIRED(503), UNAVAILABLE(503);
 
         private final int httpStatus;
         Code(int httpStatus) { this.httpStatus = httpStatus; }

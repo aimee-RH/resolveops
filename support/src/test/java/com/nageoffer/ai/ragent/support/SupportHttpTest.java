@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SupportHttpTest extends PostgresFixture {
     private MockMvc mvc() {
         var access = new SupportAccessService(jdbc);
-        return MockMvcBuilders.standaloneSetup(new SupportCaseController(access, new SupportRunStore(jdbc, access)))
+        return MockMvcBuilders.standaloneSetup(new SupportCaseController(access, new SupportRunStore(jdbc, access), false))
                 .setControllerAdvice(new SupportExceptionAdvice()).build();
     }
 
@@ -55,6 +55,8 @@ class SupportHttpTest extends PostgresFixture {
     @Test
     void authenticatedContextGetsOnlyGrantedCases() throws Exception {
         login("operator");
+        mvc().perform(get("/support/capabilities")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.investigationEnabled").value(false));
         mvc().perform(get("/support/cases")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1)).andExpect(jsonPath("$.data[0].id").value("case-a"));
         mvc().perform(get("/support/cases/case-b")).andExpect(status().isNotFound())

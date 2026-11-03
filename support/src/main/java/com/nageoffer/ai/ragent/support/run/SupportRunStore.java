@@ -101,6 +101,16 @@ public class SupportRunStore {
         });
         if (rows.isEmpty()) throw new SupportException(SupportException.Code.NOT_FOUND_OR_FORBIDDEN);
         access.requireCase(actor, rows.get(0).caseId(), SupportAccessService.Permission.READ);
+        if (Set.of("PENDING", "RUNNING").contains(rows.get(0).status())
+                && "support-investigation-v1".equals(rows.get(0).config().get("mode"))
+                && rows.get(0).startedAt().isBefore(Instant.now().minusSeconds(180))) {
+            // A bounded run cannot resume after its deadline, including after a process restart.
+            jdbc.update("""
+                    UPDATE support_run SET status='INTERRUPTED', diagnosis='{"error":"DEADLINE_EXPIRED"}',
+                    finished_at=CURRENT_TIMESTAMP WHERE id=:id AND status IN ('PENDING', 'RUNNING')
+                    """, Map.of("id", runId));
+            return get(actor, runId);
+        }
         return rows.get(0);
     }
 

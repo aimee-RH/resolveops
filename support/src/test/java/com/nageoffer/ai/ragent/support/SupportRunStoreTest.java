@@ -30,6 +30,18 @@ class SupportRunStoreTest extends PostgresFixture {
     private SupportRunStore store() { return new SupportRunStore(jdbc, new SupportAccessService(jdbc)); }
 
     @Test
+    void expiredInvestigationCannotRemainRunningOrBeCompletedByALateWorker() {
+        var store = store();
+        var scope = store.create("operator", "case-a", "expired", Map.of("mode", "support-investigation-v1"));
+        store.start(scope);
+        sql.update("UPDATE support_run SET started_at=CURRENT_TIMESTAMP - INTERVAL '4 minutes' WHERE id=?", scope.runId());
+        assertThatThrownBy(() -> store.get("other", scope.runId())).hasMessage("NOT_FOUND_OR_FORBIDDEN");
+        assertThat(sql.queryForObject("SELECT status FROM support_run WHERE id=?", String.class, scope.runId())).isEqualTo("RUNNING");
+        assertThat(store.get("operator", scope.runId()).status()).isEqualTo("INTERRUPTED");
+        assertThat(store.finish(scope, "COMPLETED", Map.of("outcome", "HANDOFF"))).isFalse();
+    }
+
+    @Test
     void repeatedRequestDoesNotCreateAnotherRunAndChangedRequestConflicts() {
         SupportRunStore store = store();
         SupportRunScope first = store.create("operator", "case-a", "request-1", Map.of("mode", "test"));

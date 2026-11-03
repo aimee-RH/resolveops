@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 import java.util.Map;
@@ -37,10 +38,13 @@ import java.util.Map;
 public class SupportCaseController {
     private final SupportAccessService access;
     private final SupportRunStore runs;
+    private final boolean investigationEnabled;
 
-    public SupportCaseController(SupportAccessService access, SupportRunStore runs) {
+    public SupportCaseController(SupportAccessService access, SupportRunStore runs,
+                                 @Value("${support.investigation.enabled:false}") boolean investigationEnabled) {
         this.access = access;
         this.runs = runs;
+        this.investigationEnabled = investigationEnabled;
     }
 
     public static String actor() {
@@ -51,6 +55,12 @@ public class SupportCaseController {
 
     @GetMapping("/cases")
     public Result<List<SupportCase>> cases() { return Results.success(access.listCases(actor())); }
+
+    @GetMapping("/capabilities")
+    public Result<Map<String, Boolean>> capabilities() {
+        actor();
+        return Results.success(Map.of("investigationEnabled", investigationEnabled));
+    }
 
     @GetMapping("/cases/{caseId}")
     public Result<SupportCase> detail(@PathVariable String caseId) {
