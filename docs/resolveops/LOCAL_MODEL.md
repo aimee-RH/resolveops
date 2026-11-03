@@ -57,7 +57,7 @@ scripts/resolveops/local-model.sh chat
 bae29252232b9e1358cf5801a7d65a07442af18fb5467cb68c7fc3711f59c511
 ```
 
-该 CLI archive 的 macOS `codesign --verify` 未通过；本次使用官方包摘要验证来源，没有修改签名或关闭系统安全设置。若需要经过应用签名验证的安装路径，应另用官方 macOS 应用安装包。
+CLI 的 `codesign --verify --deep --strict` 已通过。最初在受限执行环境中验证返回错误，随后在可访问系统验证服务的环境中重新验证原 CLI 和官方应用包，两者均通过；没有修改签名或关闭系统安全设置。官方应用包同时带有 Developer ID `Infra Technologies, Inc (3MU9H2V9Y9)` 和 stapled notarization ticket。应用包仅用于交叉验证，复核后移除，实际服务继续使用已验证的 CLI。
 
 基础模型 manifest digest：`359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7`。
 项目模型 manifest digest：`a7be9369c10a0c96a265fa30e91ba47c51483abffa0f526399cb26ed3b93456c`。
