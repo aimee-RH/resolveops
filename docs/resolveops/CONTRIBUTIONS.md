@@ -9,11 +9,11 @@
 
 ## ResolveOps additions
 
-Planned: support business data, resource authorization, case/run scope, bounded tools, structured evidence, diagnosis validation, immutable proposals, approval-controlled local repair, a support workbench and reproducible evaluations.
+Implemented: support business data, resource authorization, case/run scope, bounded read tools, structured evidence, opt-in investigation submit/cancel, evidence-only structured finalization, diagnosis validation and a polling support workbench. The investigation update also adds fixed tool query bounds, per-run citation enums and subscription/cancellation deadline protection. Planned: live indexed-runbook acceptance, immutable proposals, approval-controlled local repair, the second investigation scenario and held-out evaluations.
 
 Only actual commits and verified behavior belong in completed resume claims. AI-assisted changes require the owner to reproduce and explain the critical path; commit authorship alone does not establish independent understanding.
 
-The local-model increment adds a Qwen3 4B Modelfile, an opt-in generation profile, configurable sampling/thinking defaults, a local service helper, a configuration regression check and two opt-in real-model compatibility checks. It reuses Ollama inference and upstream AgentScope streaming/tool execution; it does not train a model or implement the complete support investigator. Deployment checks use synthetic data and mocked business services, so they are not evidence of production authorization or task-success rates.
+The original local-model increment adds a Qwen3 4B Modelfile, an opt-in generation profile, configurable sampling/thinking defaults, a local service helper, a configuration regression check and two opt-in real-model compatibility checks. Those compatibility checks use mocked business services. The later investigation update adds a local Llama 3.2 3B option and two model probes using real PostgreSQL business services; a separate cancellation probe intentionally substitutes a never-ending model stream. All data is synthetic and test identities bypass the full login chain. Both increments reuse Ollama inference and upstream AgentScope streaming/tool execution; neither trains a model or establishes production task-success rates. See [the investigation record](INVESTIGATION.md).
 
 ## Earlier experiment
 

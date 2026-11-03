@@ -23,4 +23,4 @@ The page is at `/support`, with a link in the Agent sidebar. Use the existing Ra
 
 The optional Compose file is a business-domain database, not the complete upstream runtime. Live Ragent operation still needs its documented authentication/cache/storage configuration and pgvector for the support runbook adapter. This milestone verified module compilation, service/HTTP boundaries and frontend build, not a complete deployed login-to-model flow.
 
-No investigation start endpoint or business write endpoint is exposed in M1. Histories and evidence come from persisted records; the UI does not inject fixtures or simulate a model answer.
+Investigation submit/cancel endpoints are now opt-in through `support.investigation.enabled`; the default remains disabled. See [the investigation setup and exact probes](INVESTIGATION.md). There are no business repair endpoints. Histories and evidence come from persisted records; the UI does not inject fixtures or simulate a model answer. Complete application login, storage and live vector ingestion are separate prerequisites.

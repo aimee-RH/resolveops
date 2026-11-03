@@ -1,0 +1,285 @@
+{
+  "verifiedOn": "2026-11-03",
+  "classification": "development probes, not held-out evaluation",
+  "model": {
+    "name": "resolveops-llama:3b",
+    "digest": "2cf0e7cfff162e5a4a719199aa61a6e7ea312d95751f2892836ac5c70ed8c08f",
+    "size": 2019392803,
+    "details": {
+      "parent_model": "llama3.2:3b",
+      "format": "gguf",
+      "family": "llama",
+      "families": [
+        "llama"
+      ],
+      "parameter_size": "3.2B",
+      "quantization_level": "Q4_K_M",
+      "context_length": 131072,
+      "embedding_length": 3072,
+      "runner": "llamacpp"
+    }
+  },
+  "businessData": "synthetic, isolated native PostgreSQL schemas",
+  "limits": [
+    "No live embedding or runbook index",
+    "Test supplies trusted login context; browser/SaToken flow is not exercised",
+    "Two real model probes; cancellation uses an explicit never-ending model-stream double",
+    "No business writes or production-quality claim",
+    "Keep recorded diagnosis quality issues visible; do not clean the model output"
+  ],
+  "probes": [
+    {
+      "evidence": [
+        {
+          "id": "ffeb8678-0a56-4e6f-b85e-177ebc061703",
+          "kind": "CASE",
+          "sourceRef": "case-c",
+          "version": null,
+          "hash": "bc9fd24f9c493b451c858109319cdad04d24a9b498b32503db12e6c349c9b5e6",
+          "observedAt": 1793722987.108742,
+          "snapshot": {
+            "caseId": "case-c",
+            "description": "Customer asks whether activation needs repair",
+            "resourceRef": "sub-c",
+            "scenario": "SUBSCRIPTION_ACTIVATION"
+          }
+        },
+        {
+          "id": "be3bc005-53b0-4ce5-92ce-bef2fe97a359",
+          "kind": "SUBSCRIPTION",
+          "sourceRef": "sub-c",
+          "version": "1",
+          "hash": "a47ea512d41609e53fdf0c8962a907c2998f98ac0d2a9d9b1493f127c0c2203c",
+          "observedAt": 1793722987.114482,
+          "snapshot": {
+            "activationState": "ACTIVE",
+            "paymentState": "PAID",
+            "subscriptionRef": "sub-c",
+            "version": 1
+          }
+        },
+        {
+          "id": "2c3ece1b-7569-48ee-999c-16b2b8dc2ee6",
+          "kind": "EVENTS",
+          "sourceRef": "sub-c",
+          "version": null,
+          "hash": "4338dad889ad45076f45b9a050b856dbdd716bf4364ab473d403da7c92147e6f",
+          "observedAt": 1793722987.116523,
+          "snapshot": {
+            "from": "2026-10-27T16:23:07.078263Z",
+            "items": [],
+            "to": "2026-11-03T16:23:07.078263Z",
+            "truncated": false
+          }
+        }
+      ],
+      "limits": "No live runbook index; direct trusted service actor",
+      "run": {
+        "id": "80af00ec-040a-46ea-a297-4476d5d89eb6",
+        "caseId": "case-c",
+        "actorId": "operator",
+        "status": "COMPLETED",
+        "diagnosis": {
+          "facts": [
+            {
+              "evidenceIds": [
+                "ffeb8678-0a56-4e6f-b85e-177ebc061703"
+              ],
+              "text": "The observedAt timestamp is 1793722987.108742000."
+            },
+            {
+              "evidenceIds": [
+                "be3bc005-53b0-4ce5-92ce-bef2fe97a359"
+              ],
+              "text": "The activationState of the subscription is ACTIVE."
+            }
+          ],
+          "hypotheses": [],
+          "missingInformation": [
+            "NEEDS_INFORMATION"
+          ],
+          "outcome": "NO_ACTION_NEEDED",
+          "recommendedAction": null,
+          "runbookEvidenceIds": []
+        },
+        "config": {
+          "mode": "support-investigation-v1",
+          "model": "resolveops-llama:3b",
+          "promptVersion": "support-bounded-v5",
+          "question": "Investigate this case using current evidence.",
+          "toolVersion": "support-read-v2"
+        },
+        "startedAt": 1793722982.529867,
+        "finishedAt": 1793723012.97764
+      }
+    },
+    {
+      "events": [
+        {
+          "payload": {},
+          "sequence": 1,
+          "type": "INVESTIGATION_STARTED"
+        },
+        {
+          "payload": {
+            "error": "CONFIGURATION_REQUIRED",
+            "tool": "search_runbooks"
+          },
+          "sequence": 2,
+          "type": "TOOL_FAILED"
+        },
+        {
+          "payload": {
+            "evidenceIds": [
+              "587969db-7aa3-4336-8b1f-1c1212a1cab3"
+            ],
+            "tool": "get_case_context"
+          },
+          "sequence": 3,
+          "type": "TOOL_COMPLETED"
+        },
+        {
+          "payload": {
+            "evidenceIds": [
+              "cf1bebab-ed7b-4d7a-bb51-46c446838509"
+            ],
+            "tool": "list_subscription_events"
+          },
+          "sequence": 4,
+          "type": "TOOL_COMPLETED"
+        },
+        {
+          "payload": {
+            "evidenceIds": [
+              "f98ac823-5c41-43be-9799-755156f07ca7"
+            ],
+            "tool": "get_subscription_status"
+          },
+          "sequence": 5,
+          "type": "TOOL_COMPLETED"
+        },
+        {
+          "payload": {
+            "error": "SDK_TOOL_ERROR",
+            "tool": "search_runbooks"
+          },
+          "sequence": 6,
+          "type": "TOOL_FAILED"
+        },
+        {
+          "payload": {
+            "attempt": 1
+          },
+          "sequence": 7,
+          "type": "DIAGNOSIS_STARTED"
+        },
+        {
+          "payload": {
+            "status": "COMPLETED"
+          },
+          "sequence": 8,
+          "type": "INVESTIGATION_COMPLETED"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "587969db-7aa3-4336-8b1f-1c1212a1cab3",
+          "kind": "CASE",
+          "sourceRef": "case-a",
+          "version": null,
+          "hash": "883b125dc19bbb74d7a4ff849d2f855a973aef6a19fd0de1cbecc6bebf8976bf",
+          "observedAt": 1793723017.275014,
+          "snapshot": {
+            "caseId": "case-a",
+            "description": "Customer paid but activation is pending",
+            "resourceRef": "sub-a",
+            "scenario": "SUBSCRIPTION_ACTIVATION"
+          }
+        },
+        {
+          "id": "f98ac823-5c41-43be-9799-755156f07ca7",
+          "kind": "SUBSCRIPTION",
+          "sourceRef": "sub-a",
+          "version": "1",
+          "hash": "60c40775e62313450edf884637a9102c2b32698be1d4fa6d1c2fb44fb284c807",
+          "observedAt": 1793723017.286459,
+          "snapshot": {
+            "activationState": "PENDING",
+            "paymentState": "PAID",
+            "subscriptionRef": "sub-a",
+            "version": 1
+          }
+        },
+        {
+          "id": "cf1bebab-ed7b-4d7a-bb51-46c446838509",
+          "kind": "EVENTS",
+          "sourceRef": "sub-a",
+          "version": null,
+          "hash": "81d187931bf457f0fd60c8a1630f4687a09e5f62755792e1583b30551513fd40",
+          "observedAt": 1793723017.286692,
+          "snapshot": {
+            "from": "2026-10-27T16:23:37.242804Z",
+            "items": [
+              {
+                "errorCode": "UNCLASSIFIED",
+                "eventId": "failure-a",
+                "eventType": "ACTIVATION_FAILED",
+                "occurredAt": "2026-11-03T15:23:33.332457Z"
+              },
+              {
+                "errorCode": "UNCLASSIFIED",
+                "eventId": "payment-a",
+                "eventType": "PAYMENT_CONFIRMED",
+                "occurredAt": "2026-11-03T14:23:33.332457Z"
+              }
+            ],
+            "to": "2026-11-03T16:23:37.242804Z",
+            "truncated": false
+          }
+        }
+      ],
+      "limits": "No live runbook index; trusted test login context",
+      "run": {
+        "id": "3aa509db-e7eb-494b-aa12-e4ad0bf08ccc",
+        "caseId": "case-a",
+        "actorId": "operator",
+        "status": "COMPLETED",
+        "diagnosis": {
+          "facts": [
+            {
+              "evidenceIds": [
+                "587969db-7aa3-4336-8b1f-1c1212a1cab3"
+              ],
+              "text": "Customer paid but activation is pending"
+            },
+            {
+              "evidenceIds": [
+                "f98ac823-5c41-43be-9799-755156f07ca7"
+              ],
+              "text": "Activation state is PENDING"
+            }
+          ],
+          "hypotheses": [],
+          "missingInformation": [],
+          "outcome": "HANDOFF",
+          "recommendedAction": null,
+          "runbookEvidenceIds": []
+        },
+        "config": {
+          "mode": "support-investigation-v1",
+          "model": "resolveops-llama:3b",
+          "promptVersion": "support-bounded-v5",
+          "question": "Investigate this case using current evidence.",
+          "toolVersion": "support-read-v2"
+        },
+        "startedAt": 1793723014.152627,
+        "finishedAt": 1793723042.124537
+      }
+    }
+  ],
+  "implementationSha256": {
+    "agent/src/main/java/com/nageoffer/ai/ragent/agent/support/SupportAgentProvider.java": "0408cdef5f28c1ffc9c111ba2086548d74f459969fb5d500d92a670fac70b4c5",
+    "agent/src/main/java/com/nageoffer/ai/ragent/agent/support/SupportRunService.java": "77a1c6afbe8e2bfbaae7bedeb7824b4509e570ed0a9d002d9c082889aa339e39",
+    "support/src/main/java/com/nageoffer/ai/ragent/support/run/SupportDiagnosisValidator.java": "f2389bf9f71bb05dd80e9af0b320a343d71d5134030051c6151e1ec7a96cb914"
+  }
+}
