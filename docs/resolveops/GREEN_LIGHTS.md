@@ -16,7 +16,7 @@
 ## Hard stops
 
 - Cross-tenant disclosure or unapproved/stale repair blocks release regardless of aggregate score.
-- Missing model credentials leave G3 amber. The owner explicitly deferred model configuration.
+- An unavailable configured model leaves G3 amber. Local Ollama needs no paid-model credentials; passing compatibility checks alone does not complete G3's real investigation requirements.
 - Unavailable upstream dependencies or infrastructure leave G1/G2 amber; record the original error instead of silently changing the claimed stack.
 - A draft PR may contain validated partial increments. Ready-to-review/product completion must say exactly which gates remain open.
 

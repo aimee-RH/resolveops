@@ -13,4 +13,4 @@ Follow the small commits in [PR #1](https://github.com/aimee-RH/resolveops/pull/
 9. Open `/support` only after a normal Ragent login and proper database initialization. Describe empty, unauthorized and failed states; no synthetic investigation is presented as real.
 10. Explain why proposal/operation tables do not mean approval or repair is implemented. Those services and their failure checks belong to G4.
 
-The next independent increment is the opt-in investigator, final-output validation and live runbook configuration. Model credentials remain owner-supplied and excluded from Git. The independent controlled-write increment can follow with no model-driven execution permissions.
+The next independent increment is the opt-in investigator, final-output validation and live runbook configuration. [Local Qwen3 4B](LOCAL_MODEL.md) provides generation without paid API credentials; optional cloud credentials remain owner-supplied and excluded from Git. The independent controlled-write increment can follow with no model-driven execution permissions.

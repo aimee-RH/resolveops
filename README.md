@@ -10,12 +10,14 @@ A SaaS support workbench extending [Ragent](https://github.com/nageoffer/ragent)
 - A PG-only runbook evidence adapter with collection filtering and source hashes.
 - A protected React workbench for cases, history and evidence.
 - Nineteen new engineering checks, full-reactor compilation and frontend type/build checks.
+- An opt-in local Qwen3 4B generation profile with a checked deployment recipe, a configuration check and two real-model compatibility checks using synthetic business services.
 
 The tools are not yet connected to a live support investigator. Real-model orchestration, structured diagnosis validation, approval/repair execution, the second investigation flow and held-out evaluation remain future milestones. No production data, model-success rate or user-impact claim is made.
 
 ## Development and evidence
 
 - [Development setup and exact checks](docs/resolveops/DEVELOPMENT.md)
+- [Local model setup, usage and verification](docs/resolveops/LOCAL_MODEL.md)
 - [Green-light requirements](docs/resolveops/GREEN_LIGHTS.md)
 - [Actual verification status](docs/resolveops/STATUS.md)
 - [Owner walkthrough](docs/resolveops/WALKTHROUGH.md)
