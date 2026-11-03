@@ -27,7 +27,7 @@ jobs:
           java-version: '17'
           cache: maven
       - name: Support PostgreSQL, HTTP and native tool checks
-        run: mvn -B -ntp -pl agent -am '-Dtest=Support*Test,RunbookEvidenceSearchTest' -Dsurefire.failIfNoSpecifiedTests=false test
+        run: mvn -B -ntp -pl agent -am '-Dtest=Support*Test,RunbookEvidenceSearchTest,LocalModelConfigurationTest' -Dsurefire.failIfNoSpecifiedTests=false test
       - name: Complete reactor integration
         run: mvn -B -ntp -DskipTests compile
       - name: Preserve verification evidence
