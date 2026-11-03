@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: resolveops
+      POSTGRES_USER: resolveops
+      POSTGRES_PASSWORD: ${RESOLVEOPS_DB_PASSWORD:-resolveops-local-only}
+    ports:
+      - "127.0.0.1:${RESOLVEOPS_DB_PORT:-55432}:5432"
+    volumes:
+      - resolveops-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resolveops -d resolveops"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+volumes:
+  resolveops-data:

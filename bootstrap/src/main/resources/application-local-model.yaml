@@ -1,0 +1,44 @@
+# Generation only: database, authentication, storage and embeddings need separate setup.
+support:
+  investigation:
+    enabled: ${RESOLVEOPS_INVESTIGATION_ENABLED:false}
+
+agent:
+  chat:
+    provider: ollama
+    model: ${RESOLVEOPS_LOCAL_MODEL:resolveops-qwen3:4b}
+    temperature: 0
+    reasoning-effort: ${RESOLVEOPS_REASONING_EFFORT:low}
+  mcp:
+    servers: []
+  max-iters: 4
+  max-retries: 1
+  max-concurrent-runs-per-user: 1
+  memory:
+    context-window-chars: 12000
+    summary-enabled: false
+    long-term-enabled: false
+
+ai:
+  providers:
+    ollama:
+      url: http://127.0.0.1:11434
+      api-key: ollama-local
+      endpoints:
+        chat: /v1/chat/completions
+        embedding: /v1/embeddings
+  chat:
+    candidates:
+      - id: resolveops-local
+        provider: ollama
+        model: ${RESOLVEOPS_LOCAL_MODEL:resolveops-qwen3:4b}
+    tiers:
+      fast:
+        candidates: [resolveops-local]
+        timeout-ms: 120000
+      standard:
+        candidates: [resolveops-local]
+        timeout-ms: 120000
+      deep:
+        candidates: [resolveops-local]
+        timeout-ms: 120000
