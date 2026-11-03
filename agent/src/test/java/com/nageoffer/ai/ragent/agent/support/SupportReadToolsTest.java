@@ -94,4 +94,15 @@ class SupportReadToolsTest {
         var budget = new SupportBudget();
         assertThat(IntStream.range(0, 100).parallel().filter(index -> budget.acquire()).count()).isEqualTo(12);
     }
+
+    @Test
+    void modelCannotChooseTimelineBoundsOrRetrievalCount() {
+        var reads = mock(SupportReadService.class);
+        var runs = mock(SupportRunStore.class);
+        var events = new SupportReadTools.ReadTool(SupportReadTools.Kind.EVENTS, reads, runs, null);
+        var manuals = new SupportReadTools.ReadTool(SupportReadTools.Kind.RUNBOOKS, reads, runs, null);
+        assertThat(events.callAsync(param(Map.of("from", "2023-01-01T00:00:00Z"))).block().getState()).isEqualTo(ToolResultState.ERROR);
+        assertThat(manuals.callAsync(param(Map.of("query", "activation", "topK", 10))).block().getState()).isEqualTo(ToolResultState.ERROR);
+        verifyNoInteractions(reads);
+    }
 }
