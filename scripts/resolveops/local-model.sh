@@ -28,11 +28,12 @@ case "${1:-status}" in
     "$ollama_bin" pull llama3.2:3b
     exec "$ollama_bin" create resolveops-llama:3b -f "$repo_root/resources/ollama/Modelfile.llama"
     ;;
+  setup-embedding) exec "$ollama_bin" pull nomic-embed-text:v1.5 ;;
   status)
     "$ollama_bin" list
     exec "$ollama_bin" ps
     ;;
   chat) shift; exec "$ollama_bin" run "$model" "$@" ;;
   unload) exec "$ollama_bin" stop "$model" ;;
-  *) echo 'Usage: local-model.sh {serve|setup|setup-llama|status|chat|unload}' >&2; exit 2 ;;
+  *) echo 'Usage: local-model.sh {serve|setup|setup-llama|setup-embedding|status|chat|unload}' >&2; exit 2 ;;
 esac

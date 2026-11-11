@@ -18,11 +18,27 @@
 package com.nageoffer.ai.ragent.agent.support;
 
 import com.alibaba.fastjson2.JSON;
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
+import com.baomidou.mybatisplus.core.MybatisSqlSessionFactoryBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nageoffer.ai.ragent.agent.config.AgentEngineConfiguration;
 import com.nageoffer.ai.ragent.agent.config.AgentProperties;
+import com.nageoffer.ai.ragent.core.chunk.model.Chunk;
+import com.nageoffer.ai.ragent.core.ingest.VectorTarget;
+import com.nageoffer.ai.ragent.core.ingest.embed.ChunkEmbeddingService;
 import com.nageoffer.ai.ragent.framework.context.LoginUser;
 import com.nageoffer.ai.ragent.framework.context.UserContext;
 import com.nageoffer.ai.ragent.infra.config.AIModelProperties;
+import com.nageoffer.ai.ragent.infra.embedding.OllamaEmbeddingClient;
+import com.nageoffer.ai.ragent.infra.embedding.RoutingEmbeddingService;
+import com.nageoffer.ai.ragent.infra.model.ModelHealthStore;
+import com.nageoffer.ai.ragent.infra.model.ModelRoutingExecutor;
+import com.nageoffer.ai.ragent.infra.model.ModelSelector;
+import com.nageoffer.ai.ragent.knowledge.dao.mapper.KnowledgeChunkMapper;
+import com.nageoffer.ai.ragent.knowledge.dao.mapper.KnowledgeDocumentMapper;
+import com.nageoffer.ai.ragent.knowledge.service.impl.ChunkMetadataResolver;
+import com.nageoffer.ai.ragent.rag.core.vector.PgVectorRetrieverService;
+import com.nageoffer.ai.ragent.rag.core.vector.PgVectorStoreService;
 import com.nageoffer.ai.ragent.rag.service.RunbookEvidenceSearchService;
 import com.nageoffer.ai.ragent.support.SupportJson;
 import com.nageoffer.ai.ragent.support.access.SupportAccessService;
@@ -42,11 +58,16 @@ import io.agentscope.core.hook.PostReasoningEvent;
 import io.agentscope.core.model.GenerateOptions;
 import io.agentscope.core.model.ToolSchema;
 import com.fasterxml.jackson.databind.JsonNode;
+import okhttp3.OkHttpClient;
+import org.apache.ibatis.mapping.Environment;
+import org.mybatis.spring.SqlSessionTemplate;
+import org.mybatis.spring.transaction.SpringManagedTransactionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -57,6 +78,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -74,9 +96,10 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-// Real PostgreSQL + real generation; no runbook index is supplied in this increment.
 @EnabledIfEnvironmentVariable(named = "RESOLVEOPS_INVESTIGATION_TEST", matches = "1")
 class SupportInvestigationIntegrationTest {
+    private static final String SOP = "Subscription activation reconciliation: if payment is confirmed and activation failed "
+            + "for a paid pending subscription, recommend RECONCILE_ACTIVATION for operator review.";
     private JdbcTemplate admin;
     private JdbcTemplate sql;
     private NamedParameterJdbcTemplate jdbc;
@@ -110,7 +133,7 @@ class SupportInvestigationIntegrationTest {
         schema = "resolveops_investigation_" + UUID.randomUUID().toString().replace("-", "");
         admin.execute("CREATE SCHEMA " + schema);
         var properties = new Properties();
-        properties.setProperty("currentSchema", schema);
+        properties.setProperty("currentSchema", schema + ",public");
         source.setConnectionProperties(properties);
         new ResourceDatabasePopulator(new ClassPathResource("db/261102_support_domain.sql")).execute(source);
         sql = new JdbcTemplate(source);
@@ -125,6 +148,10 @@ class SupportInvestigationIntegrationTest {
     }
 
     private SupportRunService realService() {
+        return realService(null);
+    }
+
+    private SupportRunService realService(RunbookEvidenceSearchService runbooks) {
         var binder = LocalModelConfigurationTest.configuration();
         var properties = binder.bind("agent", AgentProperties.class).get();
         properties.getChat().setModel(System.getenv().getOrDefault("RESOLVEOPS_INVESTIGATION_MODEL", properties.getChat().getModel()));
@@ -134,8 +161,10 @@ class SupportInvestigationIntegrationTest {
             protocol.add(Map.of("requestedTools", tools == null ? List.of() : tools.stream().map(ToolSchema::getName).toList()));
             return invocation.callRealMethod();
         }).when(model).stream(anyList(), anyList(), any(GenerateOptions.class));
+        var beans = new StaticListableBeanFactory();
+        if (runbooks != null) beans.addBean("runbooks", runbooks);
         var agent = new SupportAgentProvider(model, properties, new SupportReadService(jdbc, access), runs,
-                new StaticListableBeanFactory().getBeanProvider(RunbookEvidenceSearchService.class));
+                beans.getBeanProvider(RunbookEvidenceSearchService.class));
         return new SupportRunService(access, runs, agent, new SupportDiagnosisValidator(access, runs, jdbc));
     }
 
@@ -197,6 +226,94 @@ class SupportInvestigationIntegrationTest {
         assertThat(result.diagnosis().get("outcome")).isEqualTo("NO_ACTION_NEEDED");
         Files.writeString(Path.of("target/investigation-active.json"), SupportJson.write(Map.of("run", result,
                 "evidence", runs.evidence("operator", run.id()), "limits", "No live runbook index; direct trusted service actor")));
+    }
+
+    @Test
+    @EnabledIfEnvironmentVariable(named = "RESOLVEOPS_RUNBOOK_TEST", matches = "1")
+    void indexedRunbookRequiresRegisteredContentBeforeModelCanSuggestRepair() throws Exception {
+        var runbooks = indexedRunbooks();
+        var top = runbooks.search("subscription activation reconciliation", 1);
+        assertThat(top).extracting(RunbookEvidenceSearchService.ChunkEvidence::docId).containsExactly("sop-activation");
+        service = realService(runbooks);
+        var unregistered = await(service.submit("operator", "case-a", "indexed-unregistered", null).id());
+        assertThat(unregistered.status()).as(SupportJson.write(unregistered)).isEqualTo("COMPLETED");
+        assertThat(unregistered.diagnosis()).containsEntry("outcome", "HANDOFF").containsEntry("recommendedAction", null);
+        var unregisteredEvidence = runs.evidence("operator", unregistered.id());
+        assertThat(unregisteredEvidence).anySatisfy(e -> assertThat(e.sourceRef()).isEqualTo("sop-activation"));
+        assertThat(SupportJson.write(unregisteredEvidence)).doesNotContain("restricted-sop");
+        recordRunbookProbe("unregistered", unregistered);
+
+        sql.update("""
+                INSERT INTO support_runbook_policy (doc_id, content_hash, policy_code)
+                VALUES ('sop-activation', encode(sha256(convert_to(?, 'UTF8')), 'hex'), 'ACTIVATION_RECONCILE_V1')
+                """, SOP);
+        var registered = await(service.submit("operator", "case-a", "indexed-registered", null).id());
+        assertThat(registered.status()).as(SupportJson.write(registered)).isEqualTo("COMPLETED");
+        assertThat(registered.diagnosis()).containsEntry("outcome", "PROPOSE_REPAIR")
+                .containsEntry("recommendedAction", Map.of("type", "RECONCILE_ACTIVATION"));
+        var evidence = runs.evidence("operator", registered.id());
+        assertThat(SupportJson.write(evidence)).doesNotContain("restricted-sop");
+        assertThat(evidence).anySatisfy(e -> {
+            assertThat(e.sourceRef()).isEqualTo("sop-activation");
+            assertThat(registered.diagnosis().get("runbookEvidenceIds")).asList().contains(e.id());
+        });
+        assertThat(sql.queryForObject("SELECT activation_state FROM support_subscription WHERE id='sub-a'", String.class))
+                .isEqualTo("PENDING");
+        assertThat(sql.queryForObject("SELECT count(*) FROM support_action_operation", Integer.class)).isZero();
+        UserContext.set(LoginUser.builder().userId("operator").build());
+        mvc().perform(get("/support/runs/" + registered.id()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.diagnosis.outcome").value("PROPOSE_REPAIR"));
+        recordRunbookProbe("registered", registered);
+    }
+
+    private RunbookEvidenceSearchService indexedRunbooks() throws Exception {
+        var binder = LocalModelConfigurationTest.configuration("local-runbooks");
+        var ai = binder.bind("ai", AIModelProperties.class).get();
+        int dimension = binder.bind("rag.default.dimension", Integer.class).get();
+        String schemaSql = Files.readString(Path.of("../resources/database/schema_pg.sql"));
+        new ResourceDatabasePopulator(new ByteArrayResource(schemaSql.replace("vector(1536)", "vector(" + dimension + ")")
+                .getBytes(StandardCharsets.UTF_8))).execute(sql.getDataSource());
+
+        var health = new ModelHealthStore(ai);
+        var embedding = new RoutingEmbeddingService(new ModelSelector(ai, health), new ModelRoutingExecutor(health),
+                List.of(new OllamaEmbeddingClient(new OkHttpClient())));
+        var embedder = new ChunkEmbeddingService(embedding);
+        var store = new PgVectorStoreService(sql, new ObjectMapper());
+        indexRunbook(embedder, store, dimension, ai.getEmbedding().getDefaultModel(), "support-sops", "sop-activation", SOP);
+        indexRunbook(embedder, store, dimension, ai.getEmbedding().getDefaultModel(), "support-sops", "sop-invoices",
+                "Invoice export and tax receipt formatting for finance agents.");
+        indexRunbook(embedder, store, dimension, ai.getEmbedding().getDefaultModel(), "restricted", "restricted-sop",
+                "Subscription activation reconciliation");
+
+        var config = new MybatisConfiguration();
+        config.setEnvironment(new Environment("runbook-probe", new SpringManagedTransactionFactory(), sql.getDataSource()));
+        config.setMapUnderscoreToCamelCase(true);
+        config.addMapper(KnowledgeChunkMapper.class);
+        config.addMapper(KnowledgeDocumentMapper.class);
+        var session = new SqlSessionTemplate(new MybatisSqlSessionFactoryBuilder().build(config));
+        var metadata = new ChunkMetadataResolver(session.getMapper(KnowledgeChunkMapper.class),
+                session.getMapper(KnowledgeDocumentMapper.class));
+        return new RunbookEvidenceSearchService(new PgVectorRetrieverService(sql, embedding), metadata, List.of("support-sops"));
+    }
+
+    private void indexRunbook(ChunkEmbeddingService embedder, PgVectorStoreService store, int dimension, String model,
+                              String collection, String id, String text) {
+        String chunkId = id + "-1";
+        sql.update("""
+                INSERT INTO t_knowledge_document (id,kb_id,doc_name,file_url,file_type,created_by)
+                VALUES (?, ?, ?, 'fixture:runbook', 'txt', 'operator')
+                """, id, collection, id);
+        sql.update("""
+                INSERT INTO t_knowledge_chunk (id,kb_id,doc_id,chunk_index,content,created_by)
+                VALUES (?, ?, ?, 0, ?, 'operator')
+                """, chunkId, collection, id, text);
+        store.indexDocumentChunks(collection, id, embedder.embed(List.of(new Chunk(chunkId, 0, text, text, null)),
+                new VectorTarget(collection, model, dimension)));
+    }
+
+    private void recordRunbookProbe(String name, SupportRunStore.RunView run) throws Exception {
+        Files.writeString(Path.of("target/investigation-indexed-" + name + ".json"), SupportJson.write(Map.of("run", run,
+                "evidence", runs.evidence("operator", run.id()), "events", runs.events("operator", run.id(), 0))));
     }
 
     @Test

@@ -29,10 +29,13 @@ import org.springframework.mock.env.MockEnvironment;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class LocalModelConfigurationTest {
-    static Binder configuration() {
+    static Binder configuration(String... profiles) {
         var environment = new MockEnvironment();
         environment.getPropertySources().addFirst(source("base", "application.yaml"));
         environment.getPropertySources().addFirst(source("local-model", "application-local-model.yaml"));
+        for (String profile : profiles) {
+            environment.getPropertySources().addFirst(source(profile, "application-" + profile + ".yaml"));
+        }
         return Binder.get(environment);
     }
 
