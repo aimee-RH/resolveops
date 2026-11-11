@@ -11,7 +11,7 @@ The optional Compose database binds only to localhost port 55432. Its documented
 
 Integration tests start a native PostgreSQL 17.11 process through the test-only [Zonky component](https://github.com/zonkyio/embedded-postgres), on a random port. This is real PostgreSQL, not H2. Set `RESOLVEOPS_TEST_DB_URL`, `RESOLVEOPS_TEST_DB_USER` and `RESOLVEOPS_TEST_DB_PASSWORD` to test an external database instead; an unavailable explicit database fails the tests. Each test creates/drops only its own random schema. Docker Compose remains available for an optional persistent development database.
 
-Local generation now uses Ollama + Qwen3 4B with an opt-in `local-model` profile. See [local model deployment and checks](LOCAL_MODEL.md). This does not configure live embeddings or complete the support investigator.
+The opt-in `local-model` profile configures local Ollama generation. Use `local-runbooks` with a dedicated 768-dimensional pgvector database for local embeddings and indexed support handbooks. See [local model setup](LOCAL_MODEL.md) and [runbook setup and tests](RUNBOOKS.md).
 
 ## Baseline probe
 
@@ -23,4 +23,4 @@ The page is at `/support`, with a link in the Agent sidebar. Use the existing Ra
 
 The optional Compose file is a business-domain database, not the complete upstream runtime. Live Ragent operation still needs its documented authentication/cache/storage configuration and pgvector for the support runbook adapter. This milestone verified module compilation, service/HTTP boundaries and frontend build, not a complete deployed login-to-model flow.
 
-Investigation submit/cancel endpoints are now opt-in through `support.investigation.enabled`; the default remains disabled. See [the investigation setup and exact probes](INVESTIGATION.md). There are no business repair endpoints. Histories and evidence come from persisted records; the UI does not inject fixtures or simulate a model answer. Complete application login, storage and live vector ingestion are separate prerequisites.
+Investigation submit/cancel endpoints are opt-in through `support.investigation.enabled`. Histories, suggestions and evidence come from persisted records. Complete application login and storage are required for the browser walkthrough. [Investigation lifecycle and development probes](INVESTIGATION.md)

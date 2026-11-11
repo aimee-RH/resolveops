@@ -9,8 +9,8 @@ Follow the small commits in [PR #1](https://github.com/aimee-RH/resolveops/pull/
 5. Run `SupportRunStoreTest`: the subscription changes, but the saved evidence remains the original observed snapshot.
 6. Find `SupportReadTools`: point to the runtime scope check, permitted parameters, read-only declaration, call budget and sanitized error.
 7. Find `RunbookEvidenceSearchService`: show where the collection allowlist reaches the storage request and why an empty allowlist never invokes retrieval.
-8. Explain the difference between a unit-tested retrieval adapter and live pgvector/model validation. G3 remains open.
+8. Run the indexed test in [the runbook guide](RUNBOOKS.md). Show why the same retrieved text produces handoff until the exact document and hash are registered. Explain which fields the model writes and which ones the backend decides.
 9. Open `/support` only after a normal Ragent login and proper database initialization. Describe empty, unauthorized and failed states; no synthetic investigation is presented as real.
 10. Explain why proposal/operation tables do not mean approval or repair is implemented. Those services and their failure checks belong to G4.
 
-The opt-in investigator and final-output validation are implemented; inspect [the source path, actual records and failure analysis](INVESTIGATION.md). Reproduce the two real PostgreSQL/model probes and explain why they are not a benchmark. The remaining G3 work is live indexed runbooks, the repair-proposal model path and diagnosis-quality acceptance. [Local generation](LOCAL_MODEL.md) requires no paid API credentials; optional cloud credentials remain excluded from Git. The controlled-write increment remains separate and has no model-driven execution permission.
+Use the [investigation record](INVESTIGATION.md) to walk through tool calling, fact generation, citation validation and backend policy. Explain what the development probes establish and what a held-out evaluation would measure.

@@ -10,17 +10,18 @@ A SaaS support workbench extending [Ragent](https://github.com/nageoffer/ragent)
 - A PG-only runbook evidence adapter with collection filtering and source hashes.
 - A protected React workbench for cases, history and evidence.
 - Bounded per-run investigators, submit/cancel endpoints and a polling workbench; citations and repair preconditions are checked by the backend.
-- Evidence-only finalization with per-run citation IDs constrained in the output schema; model drafts do not become evidence.
+- Model-written facts cite persisted evidence. Backend rules choose no action, handoff, or a repair suggestion based on subscription status, events, and a registered runbook hash.
 - Forty-four engineering checks, full-reactor compilation and frontend type/build checks.
 - An opt-in local Qwen3 4B generation profile with a checked deployment recipe, a configuration check and two real-model compatibility checks using synthetic business services.
 
-Two synthetic development cases passed with real PostgreSQL and local Llama 3.2 3B generation: already active / no action, and unavailable runbook / handoff. A third cancellation check uses an explicit model-stream double. Live pgvector runbooks, model-generated repair proposals, approval/repair execution, full browser acceptance, the second scenario and held-out evaluation remain open. Diagnosis quality issues are recorded, so G3 remains AMBER. No production data, model-success rate or user-impact claim is made.
+The local investigation checks use Llama 3.2 3B with PostgreSQL and pgvector on synthetic subscription cases. A paired runbook test checks handoff before exact content registration and a repair suggestion afterward. The approval and execution flow, second support scenario, held-out evaluation and full browser walkthrough are tracked in [verification status](docs/resolveops/STATUS.md).
 
 ## Development and evidence
 
 - [Development setup and exact checks](docs/resolveops/DEVELOPMENT.md)
 - [Local model setup, usage and verification](docs/resolveops/LOCAL_MODEL.md)
 - [Investigation lifecycle, actual probes and failure analysis](docs/resolveops/INVESTIGATION.md)
+- [Local runbook ingestion, retrieval and repair suggestion](docs/resolveops/RUNBOOKS.md)
 - [Green-light requirements](docs/resolveops/GREEN_LIGHTS.md)
 - [Actual verification status](docs/resolveops/STATUS.md)
 - [Owner walkthrough](docs/resolveops/WALKTHROUGH.md)
