@@ -41,6 +41,7 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 import java.time.Instant;
 import java.nio.charset.StandardCharsets;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -121,7 +122,14 @@ public class SupportRunService {
                     .block(remaining.compareTo(Duration.ofSeconds(120)) > 0 ? Duration.ofSeconds(120) : remaining);
             if (running.budget.cancelled()) return;
             var observed = runs.evidence(scope.actorId(), scope.runId());
-            String data = SupportJson.write(Map.of("evidence", observed));
+            boolean activeSubscription = observed.stream().anyMatch(e -> "SUBSCRIPTION".equals(e.kind())
+                    && "ACTIVE".equals(e.snapshot().get("activationState")));
+            var businessFacts = observed.stream()
+                    .filter(e -> "SUBSCRIPTION".equals(e.kind()) || (!activeSubscription && "EVENTS".equals(e.kind())))
+                    .sorted(Comparator.comparing(SupportRunStore.Evidence::kind).reversed()).toList();
+            // The server uses the registered runbook hash to decide the action. The fact writer needs the business observations.
+            var factSources = businessFacts.isEmpty() ? observed : businessFacts;
+            String data = SupportJson.write(Map.of("evidence", factSources));
             Duration correctionTime = Duration.between(Instant.now(), pending.startedAt().plusSeconds(120));
             if (observed.isEmpty() || data.getBytes(StandardCharsets.UTF_8).length > 5000
                     || correctionTime.isNegative() || correctionTime.isZero())
@@ -130,14 +138,14 @@ public class SupportRunService {
             runs.event(scope, "DIAGNOSIS_STARTED", Map.of("attempt", 1));
             try (var formatter = agents.formatter()) {
                 var correction = Msg.builder().role(MsgRole.USER).content(TextBlock.builder().text(data).build()).build();
-                var formatted = formatter.call(List.of(correction), SupportAgentProvider.diagnosisSchema(observed), running.context)
+                var formatted = formatter.call(List.of(correction), SupportAgentProvider.factsSchema(factSources), running.context)
                         .subscribeOn(Schedulers.boundedElastic())
                         .cancelOn(Schedulers.boundedElastic())
                         .takeUntilOther(running.cancelled.asMono().publishOn(Schedulers.boundedElastic())).block(correctionTime);
                 if (running.budget.cancelled()) return;
                 String corrected = formatted == null ? null : formatted.hasStructuredData()
                         ? SupportJson.write(formatted.getStructuredData(false)) : formatted.getTextContent();
-                var diagnosis = validator.validate(scope, corrected);
+                var diagnosis = validator.complete(scope, corrected);
                 settle(scope, "COMPLETED", diagnosis);
             }
         } catch (Exception error) {

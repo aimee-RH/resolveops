@@ -68,7 +68,7 @@ class SupportRunServiceTest {
         when(provider.formatter()).thenReturn(formatter);
         when(formatter.call(anyList(), any(JsonNode.class), any())).thenReturn(Mono.just(
                 Msg.builder().role(MsgRole.ASSISTANT).content(TextBlock.builder().text("formatted").build()).build()));
-        when(validator.validate(scope, "formatted")).thenReturn(Map.of("outcome", "HANDOFF"));
+        when(validator.complete(scope, "formatted")).thenReturn(Map.of("outcome", "HANDOFF"));
         when(runs.create(eq("actor"), eq("case"), anyString(), anyMap())).thenReturn(scope);
         when(runs.get("actor", "run")).thenAnswer(call -> new SupportRunStore.RunView("run", "case", "actor", status.get(),
                 diagnosis.get(), Map.of(), Instant.now(), null));
@@ -119,7 +119,7 @@ class SupportRunServiceTest {
     void invalidDiagnosisCannotBeReportedAsCompleted() throws Exception {
         var result = Msg.builder().role(MsgRole.ASSISTANT).content(TextBlock.builder().text("untrusted output").build()).build();
         when(agent.streamEvents(any(Msg.class), any())).thenReturn(Flux.just(new AgentResultEvent(result)));
-        when(validator.validate(scope, "formatted")).thenThrow(new SupportException(SupportException.Code.INVALID_DIAGNOSIS));
+        when(validator.complete(scope, "formatted")).thenThrow(new SupportException(SupportException.Code.INVALID_DIAGNOSIS));
         service.submit("actor", "case", "key", null);
         assertThat(terminal.await(3, TimeUnit.SECONDS)).isTrue();
         assertThat(status.get()).isEqualTo("FAILED");

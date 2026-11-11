@@ -63,13 +63,20 @@ class SupportDiagnosisValidatorTest extends PostgresFixture {
         value.put("facts", List.of(Map.of("text", "Paid and activation failed", "evidenceIds", List.of(sub.id(), events.id()))));
         value.put("recommendedAction", Map.of("type", "RECONCILE_ACTIVATION"));
         value.put("runbookEvidenceIds", List.of(manual.id()));
+        String facts = SupportJson.write(Map.of("facts", value.get("facts")));
+        assertThat(validator().complete(scope, facts)).containsEntry("outcome", "HANDOFF").containsEntry("recommendedAction", null);
         assertThatThrownBy(() -> validator().validate(scope, SupportJson.write(value))).hasMessage("INVALID_DIAGNOSIS");
         sql.update("INSERT INTO support_runbook_policy VALUES ('runbook-a', ?, 'ACTIVATION_RECONCILE_V1')", hash);
+        assertThat(validator().complete(scope, facts)).containsEntry("outcome", "PROPOSE_REPAIR")
+                .containsEntry("runbookEvidenceIds", List.of(manual.id()));
+        assertThatThrownBy(() -> validator().complete(scope, SupportJson.write(value))).hasMessage("INVALID_DIAGNOSIS");
         assertThat(validator().validate(scope, SupportJson.write(value))).containsEntry("outcome", "PROPOSE_REPAIR");
         assertThat(sql.queryForObject("SELECT activation_state FROM support_subscription WHERE id='sub-a'", String.class)).isEqualTo("PENDING");
         assertThat(sql.queryForObject("SELECT count(*) FROM support_action_operation", Integer.class)).isZero();
         value.put("facts", List.of(Map.of("text", "Only a status, without timeline", "evidenceIds", List.of(sub.id()))));
         assertThatThrownBy(() -> validator().validate(scope, SupportJson.write(value))).hasMessage("INVALID_DIAGNOSIS");
+        sql.update("UPDATE support_runbook_policy SET content_hash=? WHERE doc_id='runbook-a'", "b".repeat(64));
+        assertThat(validator().complete(scope, facts)).containsEntry("outcome", "HANDOFF");
     }
 
     @Test

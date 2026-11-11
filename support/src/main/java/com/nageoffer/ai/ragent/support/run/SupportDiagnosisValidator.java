@@ -32,7 +32,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,16 +49,61 @@ public class SupportDiagnosisValidator {
         this.access = access; this.runs = runs; this.jdbc = jdbc;
     }
 
+    public Map<String, Object> complete(SupportRunScope scope, String modelFacts) {
+        var diagnosis = parse(modelFacts);
+        if (!diagnosis.keySet().equals(Set.of("facts"))) throw invalid();
+        var observed = runs.evidence(scope.actorId(), scope.runId());
+        List<String> manuals = List.of();
+        List<String> missing = List.of();
+        Map<String, String> action = null;
+        String outcome;
+        if (observed.stream().anyMatch(SupportDiagnosisValidator::activeSubscription)) {
+            outcome = "NO_ACTION_NEEDED";
+        } else if (observed.stream().noneMatch(e -> "SUBSCRIPTION".equals(e.kind()))) {
+            outcome = "NEEDS_INFORMATION";
+            missing = List.of("Current subscription payment and activation status");
+        } else {
+            boolean repairFacts = scope.scenario() == SupportCase.Scenario.SUBSCRIPTION_ACTIVATION && hasRepairFacts(observed);
+            if (repairFacts) {
+                manuals = observed.stream().filter(e -> "RUNBOOK".equals(e.kind())).filter(this::approvedPolicy)
+                        .map(SupportRunStore.Evidence::id).distinct().limit(1).toList();
+            }
+            if (manuals.isEmpty()) {
+                outcome = "HANDOFF";
+                missing = List.of(repairFacts ? "Registered activation reconciliation runbook"
+                        : "Confirmed payment and failed activation for a paid pending or failed subscription");
+            } else {
+                outcome = "PROPOSE_REPAIR";
+                action = Map.of("type", "RECONCILE_ACTIVATION");
+            }
+        }
+        diagnosis.put("outcome", outcome);
+        diagnosis.put("hypotheses", List.of());
+        diagnosis.put("missingInformation", missing);
+        diagnosis.put("recommendedAction", action);
+        diagnosis.put("runbookEvidenceIds", manuals);
+        return validate(scope, diagnosis, observed);
+    }
+
     public Map<String, Object> validate(SupportRunScope scope, String raw) {
-        access.requireScope(scope);
+        return validate(scope, parse(raw), runs.evidence(scope.actorId(), scope.runId()));
+    }
+
+    private static Map<String, Object> parse(String raw) {
         if (raw == null || raw.length() > 16000) throw invalid();
         Map<String, Object> result;
         try { result = JSON.readValue(raw, new TypeReference<>() { }); }
         catch (Exception e) { throw invalid(); }
-        if (result == null || !result.keySet().equals(FIELDS)) throw invalid();
+        if (result == null) throw invalid();
+        return result;
+    }
+
+    private Map<String, Object> validate(SupportRunScope scope, Map<String, Object> result, List<SupportRunStore.Evidence> observed) {
+        access.requireScope(scope);
+        if (!result.keySet().equals(FIELDS)) throw invalid();
         String outcome = text(result.get("outcome"), 40);
         if (!Set.of("PROPOSE_REPAIR", "NO_ACTION_NEEDED", "NEEDS_INFORMATION", "HANDOFF").contains(outcome)) throw invalid();
-        var evidence = runs.evidence(scope.actorId(), scope.runId()).stream()
+        var evidence = observed.stream()
                 .collect(Collectors.toMap(SupportRunStore.Evidence::id, e -> e));
         Set<String> cited = new HashSet<>();
         List<?> facts = list(result.get("facts"), 8);
@@ -78,27 +122,33 @@ public class SupportDiagnosisValidator {
             if (!evidence.containsKey(id) || !"RUNBOOK".equals(evidence.get(id).kind())) throw invalid();
         }
         var citedEvidence = evidence.values().stream().filter(e -> cited.contains(e.id())).toList();
-        Predicate<SupportRunStore.Evidence> active = e -> "SUBSCRIPTION".equals(e.kind())
-                && "ACTIVE".equals(e.snapshot().get("activationState"));
-        if ("NO_ACTION_NEEDED".equals(outcome) && citedEvidence.stream().noneMatch(active)) throw invalid();
+        if ("NO_ACTION_NEEDED".equals(outcome) && citedEvidence.stream().noneMatch(SupportDiagnosisValidator::activeSubscription)) throw invalid();
         if ("NEEDS_INFORMATION".equals(outcome) && missing.isEmpty()) throw invalid();
         if ("PROPOSE_REPAIR".equals(outcome)) {
             if (scope.scenario() != SupportCase.Scenario.SUBSCRIPTION_ACTIVATION || !missing.isEmpty()
                     || !(result.get("recommendedAction") instanceof Map<?, ?> action)
                     || !action.equals(Map.of("type", "RECONCILE_ACTIVATION"))) throw invalid();
-            boolean paidPending = citedEvidence.stream().anyMatch(e -> "SUBSCRIPTION".equals(e.kind())
-                    && "PAID".equals(e.snapshot().get("paymentState"))
-                    && ("PENDING".equals(e.snapshot().get("activationState"))
-                    || "FAILED".equals(e.snapshot().get("activationState"))));
-            boolean timeline = citedEvidence.stream().anyMatch(e -> "EVENTS".equals(e.kind())
-                    && Boolean.FALSE.equals(e.snapshot().get("truncated"))
-                    && event(e, "PAYMENT_CONFIRMED") && event(e, "ACTIVATION_FAILED"));
             boolean policy = manuals.stream().map(evidence::get).anyMatch(this::approvedPolicy);
-            if (!paidPending || !timeline || !policy) throw invalid();
+            if (!hasRepairFacts(citedEvidence) || !policy) throw invalid();
         } else if (result.get("recommendedAction") != null) throw invalid();
         // Citation membership and preconditions are checked here; factual entailment still needs evaluation.
         access.requireScope(scope);
         return result;
+    }
+
+    private static boolean activeSubscription(SupportRunStore.Evidence e) {
+        return "SUBSCRIPTION".equals(e.kind()) && "ACTIVE".equals(e.snapshot().get("activationState"));
+    }
+
+    private static boolean hasRepairFacts(List<SupportRunStore.Evidence> evidence) {
+        boolean paidPending = evidence.stream().anyMatch(e -> "SUBSCRIPTION".equals(e.kind())
+                && "PAID".equals(e.snapshot().get("paymentState"))
+                && ("PENDING".equals(e.snapshot().get("activationState"))
+                || "FAILED".equals(e.snapshot().get("activationState"))));
+        boolean timeline = evidence.stream().anyMatch(e -> "EVENTS".equals(e.kind())
+                && Boolean.FALSE.equals(e.snapshot().get("truncated"))
+                && event(e, "PAYMENT_CONFIRMED") && event(e, "ACTIVATION_FAILED"));
+        return paidPending && timeline;
     }
 
     private boolean approvedPolicy(SupportRunStore.Evidence evidence) {
