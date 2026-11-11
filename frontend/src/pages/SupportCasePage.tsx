@@ -7,7 +7,7 @@ import type { SupportCase, SupportEvidence, SupportRun, SupportRunEvent } from "
 
 const scenarioName = { SUBSCRIPTION_ACTIVATION: "订阅开通故障", API_AUTHORIZATION: "API 授权故障" };
 const message = (error: unknown) => error instanceof Error ? error.message : "读取失败，请稍后重试";
-const outcomeName = { PROPOSE_REPAIR: "建议修复，等待人工审核", NO_ACTION_NEEDED: "无需修复", NEEDS_INFORMATION: "需要补充信息", HANDOFF: "转交人工处理" };
+const outcomeName = { PROPOSE_REPAIR: "建议修复，需人工复核", NO_ACTION_NEEDED: "无需修复", NEEDS_INFORMATION: "需要补充信息", HANDOFF: "转交人工处理" };
 const ongoing = (run: SupportRun) => run.status === "PENDING" || run.status === "RUNNING";
 
 export function SupportCasePage() {
@@ -144,6 +144,17 @@ export function SupportCasePage() {
               {selectedRun && <div className="rounded-lg border p-4"><p className="text-sm">运行状态：{selectedRun.status}</p>
                 {ongoing(selectedRun) && <Button variant="outline" className="mt-3" disabled={submitting} onClick={cancel}>停止调查</Button>}
                 {selectedRun.diagnosis?.outcome && <h3 className="mt-3 font-medium">{outcomeName[selectedRun.diagnosis.outcome]}</h3>}
+                {selectedRun.diagnosis?.recommendedAction?.type === "RECONCILE_ACTIVATION" &&
+                  <p className="mt-2 text-sm">建议核对付款与开通状态，并修复两者不一致的问题。</p>}
+                {!!selectedRun.diagnosis?.runbookEvidenceIds?.length && <ul aria-label="引用的手册" className="mt-2 space-y-1 text-sm">
+                  {selectedRun.diagnosis.runbookEvidenceIds.map((id) => {
+                    const title = evidence.find((item) => item.id === id)?.snapshot.title;
+                    return <li key={id}><a className="break-all underline" href={`#evidence-${id}`} onClick={() => {
+                      const panel = document.getElementById(`evidence-${id}`);
+                      if (panel instanceof HTMLDetailsElement) panel.open = true;
+                    }}>{typeof title === "string" ? title : id}</a></li>;
+                  })}
+                </ul>}
                 {selectedRun.diagnosis?.error && <p role="alert" className="mt-3 text-sm">调查未完成：{selectedRun.diagnosis.error}。可查看已有证据，再重新调查。</p>}
                 {selectedRun.diagnosis?.facts?.map((fact, index) => <div key={index} className="mt-3 text-sm"><p>{fact.text}</p>
                   <p className="break-all text-xs text-muted-foreground">证据：{fact.evidenceIds.join("、")}</p></div>)}
@@ -156,7 +167,7 @@ export function SupportCasePage() {
         </section>
         <aside aria-label="运行证据" className="min-w-0 space-y-3"><h2 className="font-semibold">运行证据</h2>
           {!evidence.length && <p className="text-sm text-muted-foreground">选择真实调查记录后查看。未产生证据时保持为空。</p>}
-          {evidence.map((item) => <details key={item.id} className="rounded-lg border p-3 text-sm"><summary className="cursor-pointer break-all">{item.kind} · {item.sourceRef}</summary>
+          {evidence.map((item) => <details key={item.id} id={`evidence-${item.id}`} className="rounded-lg border p-3 text-sm"><summary className="cursor-pointer break-all">{item.kind} · {item.sourceRef}</summary>
             <p className="mt-2 break-all text-xs text-muted-foreground">观测时间：{item.observedAt}<br />内容标识：{item.hash}</p>
             <pre className="mt-3 whitespace-pre-wrap break-words text-xs">{JSON.stringify(item.snapshot, null, 2)}</pre>
           </details>)}
