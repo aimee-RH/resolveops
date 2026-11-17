@@ -1,6 +1,7 @@
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
 import { LoginPage } from "@/pages/LoginPage";
+import { SupportCasePage } from "@/pages/SupportCasePage";
 import { EngineGate } from "@/components/common/EngineGate";
 import { ChangeLogsPage } from "@/pages/ChangeLogsPage";
 import { DocPreviewPage } from "@/pages/DocPreviewPage";
@@ -65,6 +66,8 @@ function HomeRedirect() {
 }
 
 export const router = createBrowserRouter([
+  { path: "/support", element: <RequireAuth><SupportCasePage /></RequireAuth> },
+  { path: "/support/:caseId", element: <RequireAuth><SupportCasePage /></RequireAuth> },
   {
     path: "/",
     element: <HomeRedirect />

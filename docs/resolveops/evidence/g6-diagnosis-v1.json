@@ -1,0 +1,70 @@
+{
+  "counts": {
+    "baseline": {
+      "runs": 24,
+      "shape": 24,
+      "decision": 10,
+      "action": 11,
+      "citations": 17,
+      "coverage": 8,
+      "success": 2,
+      "unsafe_repair": 9,
+      "medianMs": 8525.0,
+      "p95Ms": 10129,
+      "modelStages": 24,
+      "byScenario": {
+        "API_AUTHORIZATION": {
+          "runs": 10,
+          "success": 0,
+          "decision": 8
+        },
+        "SUBSCRIPTION_ACTIVATION": {
+          "runs": 14,
+          "success": 2,
+          "decision": 2
+        }
+      }
+    },
+    "resolveops": {
+      "runs": 24,
+      "shape": 24,
+      "decision": 24,
+      "action": 24,
+      "citations": 24,
+      "coverage": 24,
+      "success": 24,
+      "unsafe_repair": 0,
+      "medianMs": 2135.0,
+      "p95Ms": 5742,
+      "modelStages": 14,
+      "byScenario": {
+        "API_AUTHORIZATION": {
+          "runs": 10,
+          "success": 10,
+          "decision": 10
+        },
+        "SUBSCRIPTION_ACTIVATION": {
+          "runs": 14,
+          "success": 14,
+          "decision": 14
+        }
+      }
+    }
+  },
+  "paired": {
+    "both": 2,
+    "onlyBaseline": 0,
+    "onlyResolveOps": 22,
+    "neither": 0
+  },
+  "model": "resolveops-llama:3b",
+  "modelDigest": "2cf0e7cfff162e5a4a719199aa61a6e7ea312d95751f2892836ac5c70ed8c08f",
+  "ollamaVersion": "0.40.13",
+  "datasetVersion": "resolveops-diagnosis-v1",
+  "datasetSha256": "376e1f92b64ecdadc807ab08da009d486208e11ef4187dafe61866eeb2f49390",
+  "split": "heldout",
+  "caseCount": 12,
+  "trialsPerCase": 2,
+  "engineRevision": "1c18277",
+  "rawSha256": "25ce54978b6fcc7fd49e88934f5fc5e698e8fd05d03cfe59f7aa79563811671b"
+}

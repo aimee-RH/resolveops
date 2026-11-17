@@ -24,6 +24,7 @@ import com.nageoffer.ai.ragent.infra.config.AIModelProperties;
 import com.nageoffer.ai.ragent.infra.enums.ModelProvider;
 import io.agentscope.extensions.model.openai.OpenAIChatModel;
 import io.agentscope.extensions.model.openai.compat.deepseek.DeepSeekFormatter;
+import io.agentscope.core.model.GenerateOptions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -64,6 +65,8 @@ public class AgentEngineConfiguration {
                 .apiKey(provider.getApiKey())
                 .modelName(chat.getModel())
                 .stream(true)
+                .generateOptions(GenerateOptions.builder().temperature(chat.getTemperature())
+                        .reasoningEffort(chat.getReasoningEffort()).build())
                 // 兼容端点普遍无法同时处理 response_format 与工具调用，统一走 generate_response 兜底
                 .nativeStructuredOutputWithTools(false);
         applyProviderFormatter(builder, chat.getProvider());

@@ -1,0 +1,18 @@
+# Use with local-model and a fresh 768-dimensional pgvector database.
+rag:
+  vector:
+    type: pg
+  default:
+    dimension: 768
+
+ai:
+  embedding:
+    default-model: resolveops-local-embedding
+    candidates:
+      - id: resolveops-local-embedding
+        provider: ollama
+        model: nomic-embed-text:v1.5
+        dimension: 768
+
+support:
+  runbook-collections: ${RESOLVEOPS_RUNBOOK_COLLECTIONS:}

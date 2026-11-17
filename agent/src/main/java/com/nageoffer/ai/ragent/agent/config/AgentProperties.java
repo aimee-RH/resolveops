@@ -79,5 +79,9 @@ public class AgentProperties {
          * 直接传给 OpenAI 兼容端点的模型名
          */
         private String model;
+
+        private Double temperature;
+
+        private String reasoningEffort;
     }
 }
