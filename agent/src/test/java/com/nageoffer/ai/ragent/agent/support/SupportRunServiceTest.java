@@ -63,7 +63,7 @@ class SupportRunServiceTest {
     void prepare() {
         when(access.requireCase("actor", "case", SupportAccessService.Permission.INVESTIGATE))
                 .thenReturn(new SupportCase("case", "tenant", scope.scenario(), "sub", "Synthetic", "OPEN", 1));
-        when(provider.snapshot(any())).thenReturn(Map.of("mode", "support-investigation-v1"));
+        when(provider.snapshot(any(), any())).thenReturn(Map.of("mode", "support-investigation-v1"));
         when(provider.create(scope)).thenReturn(agent);
         when(provider.formatter()).thenReturn(formatter);
         when(formatter.call(anyList(), any(JsonNode.class), any())).thenReturn(Mono.just(

@@ -68,11 +68,9 @@ public class SupportRunService {
 
     public SupportRunStore.RunView submit(String actor, String caseId, String requestKey, String question) {
         var supportCase = access.requireCase(actor, caseId, SupportAccessService.Permission.INVESTIGATE);
-        if (supportCase.scenario() != SupportCase.Scenario.SUBSCRIPTION_ACTIVATION)
-            throw new SupportException(SupportException.Code.CONFIGURATION_REQUIRED);
         String input = question == null || question.isBlank() ? "Investigate this case using current evidence." : question.strip();
         if (input.length() > 2000) throw new SupportException(SupportException.Code.INVALID_ARGUMENT);
-        var scope = runs.create(actor, caseId, requestKey, agents.snapshot(input));
+        var scope = runs.create(actor, caseId, requestKey, agents.snapshot(supportCase.scenario(), input));
         var state = runs.get(actor, scope.runId());
         if (!"PENDING".equals(state.status())) return state;
         var running = new Running(scope);
@@ -121,14 +119,14 @@ public class SupportRunService {
                     .takeUntilOther(running.cancelled.asMono().publishOn(Schedulers.boundedElastic()))
                     .block(remaining.compareTo(Duration.ofSeconds(120)) > 0 ? Duration.ofSeconds(120) : remaining);
             if (running.budget.cancelled()) return;
+            if (scope.scenario() == SupportCase.Scenario.API_AUTHORIZATION) {
+                access.requireScope(scope);
+                runs.event(scope, "DIAGNOSIS_STARTED", Map.of("attempt", 1, "source", "RULES"));
+                settle(scope, "COMPLETED", validator.completeApi(scope));
+                return;
+            }
             var observed = runs.evidence(scope.actorId(), scope.runId());
-            boolean activeSubscription = observed.stream().anyMatch(e -> "SUBSCRIPTION".equals(e.kind())
-                    && "ACTIVE".equals(e.snapshot().get("activationState")));
-            var businessFacts = observed.stream()
-                    .filter(e -> "SUBSCRIPTION".equals(e.kind()) || (!activeSubscription && "EVENTS".equals(e.kind())))
-                    .sorted(Comparator.comparing(SupportRunStore.Evidence::kind).reversed()).toList();
-            // The server uses the registered runbook hash to decide the action. The fact writer needs the business observations.
-            var factSources = businessFacts.isEmpty() ? observed : businessFacts;
+            var factSources = subscriptionFactSources(observed);
             String data = SupportJson.write(Map.of("evidence", factSources));
             Duration correctionTime = Duration.between(Instant.now(), pending.startedAt().plusSeconds(120));
             if (observed.isEmpty() || data.getBytes(StandardCharsets.UTF_8).length > 5000
@@ -158,6 +156,16 @@ public class SupportRunService {
             if (running.agent != null) running.agent.close();
             active.remove(scope.runId(), running);
         }
+    }
+
+    private static List<SupportRunStore.Evidence> subscriptionFactSources(List<SupportRunStore.Evidence> observed) {
+        boolean activeSubscription = observed.stream().anyMatch(e -> "SUBSCRIPTION".equals(e.kind())
+                && "ACTIVE".equals(e.snapshot().get("activationState")));
+        var businessFacts = observed.stream()
+                .filter(e -> "SUBSCRIPTION".equals(e.kind()) || (!activeSubscription && "EVENTS".equals(e.kind())))
+                .sorted(Comparator.comparing(SupportRunStore.Evidence::kind).reversed()).toList();
+        // Subscription policy is decided separately from formatting model-written facts.
+        return businessFacts.isEmpty() ? observed : businessFacts;
     }
 
     private void settle(SupportRunScope scope, String status, Map<String, Object> diagnosis) {

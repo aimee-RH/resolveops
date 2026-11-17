@@ -229,6 +229,55 @@ class SupportInvestigationIntegrationTest {
     }
 
     @Test
+    void realApiInvestigationDistinguishes401And403AndRequestsMissingRecords() throws Exception {
+        sql.update("""
+                INSERT INTO support_integration VALUES
+                ('service-x','tenant-a',true,'{"grantedScopes":["ORDER_READ"],"token":"PRIVATE_TOKEN"}',1),
+                ('service-y','tenant-a',true,'{"grantedScopes":[]}',1),
+                ('service-z','tenant-a',true,'{}',1)
+                """);
+        sql.update("""
+                INSERT INTO support_case (id,tenant_id,scenario,resource_id,description) VALUES
+                ('api-x','tenant-a','API_AUTHORIZATION','service-x','Customer reports trouble with the integration'),
+                ('api-y','tenant-a','API_AUTHORIZATION','service-y','Customer reports trouble with the integration'),
+                ('api-z','tenant-a','API_AUTHORIZATION','service-z','Customer reports trouble with the integration')
+                """);
+        sql.update("""
+                INSERT INTO support_api_request_log (id,tenant_id,integration_id,occurred_at,route_template,status_code,error_code)
+                VALUES ('request-x','tenant-a','service-x',clock_timestamp(),'/orders/{id}',401,'TOKEN_EXPIRED'),
+                       ('request-y','tenant-a','service-y',clock_timestamp(),'/orders/{id}',403,'MISSING_SCOPE')
+                """);
+        service = realService();
+        var mvc = mvc();
+        UserContext.set(LoginUser.builder().userId("operator").build());
+        verifyApiProbe(mvc, "api-x", "HANDOFF", "expired token", "Recorded denials in the window: 1. Observed responses: HTTP 401 (TOKEN_EXPIRED).");
+        verifyApiProbe(mvc, "api-y", "HANDOFF", "missing scope", "Recorded denials in the window: 1. Observed responses: HTTP 403 (MISSING_SCOPE).");
+        verifyApiProbe(mvc, "api-z", "NEEDS_INFORMATION", "recent HTTP 401/403 record", "No HTTP 401/403 responses were recorded in the last 24 hours.");
+        assertThat(sql.queryForObject("SELECT count(*) FROM support_action_operation", Integer.class)).isZero();
+        assertThat(sql.queryForObject("SELECT count(*) FROM support_integration WHERE enabled AND version=1", Integer.class)).isEqualTo(3);
+    }
+
+    private void verifyApiProbe(MockMvc mvc, String caseId, String outcome, String guidance, String fact) throws Exception {
+        var request = mvc.perform(post("/support/cases/" + caseId + "/runs").contentType("application/json")
+                .content("{\"requestKey\":\"api-probe\"}")).andExpect(status().isOk()).andReturn();
+        String runId = JSON.parseObject(request.getResponse().getContentAsString()).getJSONObject("data").getString("id");
+        var result = await(runId);
+        assertThat(result.status()).as(SupportJson.write(result)).isEqualTo("COMPLETED");
+        assertThat(result.diagnosis()).containsEntry("outcome", outcome).containsEntry("recommendedAction", null);
+        assertThat(SupportJson.write(result.diagnosis())).contains(guidance);
+        assertThat(SupportJson.write(result.diagnosis().get("facts"))).contains(fact);
+        var evidence = runs.evidence("operator", runId);
+        assertThat(evidence).extracting(SupportRunStore.Evidence::kind).contains("INTEGRATION", "API_DENIALS")
+                .doesNotContain("SUBSCRIPTION", "EVENTS", "RUNBOOK");
+        assertThat(SupportJson.write(evidence)).doesNotContain("PRIVATE_TOKEN", "ORDER_READ");
+        var events = runs.events("operator", runId, 0);
+        assertThat(SupportJson.write(events)).contains("get_integration_status", "list_api_denials");
+        mvc.perform(get("/support/runs/" + runId)).andExpect(status().isOk()).andExpect(jsonPath("$.data.diagnosis.outcome").value(outcome));
+        Files.writeString(Path.of("target/investigation-" + caseId + ".json"), SupportJson.write(Map.of("run", result,
+                "evidence", evidence, "events", events)));
+    }
+
+    @Test
     @EnabledIfEnvironmentVariable(named = "RESOLVEOPS_RUNBOOK_TEST", matches = "1")
     void indexedRunbookRequiresRegisteredContentBeforeModelCanSuggestRepair() throws Exception {
         var runbooks = indexedRunbooks();
@@ -320,7 +369,7 @@ class SupportInvestigationIntegrationTest {
     void cancellationStopsAnInFlightStreamAndCannotBeOverwritten() throws Exception {
         var provider = mock(SupportAgentProvider.class);
         var agent = mock(ReActAgent.class);
-        when(provider.snapshot(any())).thenReturn(Map.of("mode", "support-investigation-v1"));
+        when(provider.snapshot(any(), any())).thenReturn(Map.of("mode", "support-investigation-v1"));
         when(provider.create(any())).thenReturn(agent);
         var started = new CountDownLatch(1);
         var disposed = new CountDownLatch(1);

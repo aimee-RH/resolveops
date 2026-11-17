@@ -138,7 +138,7 @@ export function SupportCasePage() {
             <div className="rounded-lg border p-5"><h2 className="text-lg font-semibold">{scenarioName[detail.scenario]}</h2>
               <p className="mt-3 whitespace-pre-wrap">{detail.description}</p>
               <dl className="mt-4 grid grid-cols-2 gap-2 text-sm"><dt>客户</dt><dd className="break-all">{detail.tenantId}</dd><dt>业务资源</dt><dd className="break-all">{detail.resourceId}</dd><dt>工单状态</dt><dd>{detail.status}</dd></dl>
-              <Button className="mt-4" disabled={!enabled || detail.scenario !== "SUBSCRIPTION_ACTIVATION" || submitting || runs.some(ongoing)} onClick={investigate}>
+              <Button className="mt-4" disabled={!enabled || submitting || runs.some(ongoing)} onClick={investigate}>
                 {submitting ? "正在提交…" : "开始只读调查"}
               </Button>
             </div>
@@ -166,7 +166,7 @@ export function SupportCasePage() {
                   <p className="break-all text-xs text-muted-foreground">证据：{fact.evidenceIds.join("、")}</p></div>)}
                 {selectedRun.diagnosis?.hypotheses?.map((item, index) => <p key={index} className="mt-2 text-sm">待验证：{item}</p>)}
                 {selectedRun.diagnosis?.missingInformation?.map((item, index) => <p key={index} className="mt-2 text-sm">待补充：{item}</p>)}
-                {repairEnabled && selectedRun.status === "COMPLETED" && selectedRun.diagnosis?.outcome === "PROPOSE_REPAIR" &&
+                {repairEnabled && detail.scenario === "SUBSCRIPTION_ACTIVATION" && selectedRun.status === "COMPLETED" && selectedRun.diagnosis?.outcome === "PROPOSE_REPAIR" &&
                   <SupportRepairPanel key={selectedRun.id} runId={selectedRun.id} />}
               </div>}
               {events.length > 0 && <ol className="space-y-2 text-sm">{events.map((event) => <li key={event.sequence} className="rounded border p-3">{event.type}<pre className="mt-2 whitespace-pre-wrap break-words text-xs">{JSON.stringify(event.payload, null, 2)}</pre></li>)}</ol>}

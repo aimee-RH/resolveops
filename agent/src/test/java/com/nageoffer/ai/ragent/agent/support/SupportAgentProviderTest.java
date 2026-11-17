@@ -50,7 +50,11 @@ class SupportAgentProviderTest {
             first.getToolkit().getToolNames().forEach(name -> assertThat(first.getToolkit().getTool(name).isReadOnly()).isTrue());
             assertThat(first.getGenerateOptions().getReasoningEffort()).isEqualTo("none");
         }
-        assertThatThrownBy(() -> provider.create(new SupportRunScope("run", "actor", "tenant", "case", "api", SupportCase.Scenario.API_AUTHORIZATION)))
-                .hasMessage("CONFIGURATION_REQUIRED");
+        var apiScope = new SupportRunScope("run", "actor", "tenant", "case", "api", SupportCase.Scenario.API_AUTHORIZATION);
+        try (var api = provider.create(apiScope)) {
+            assertThat(api.getToolkit().getToolNames())
+                    .containsExactlyInAnyOrder("get_case_context", "get_integration_status", "list_api_denials");
+            api.getToolkit().getToolNames().forEach(name -> assertThat(api.getToolkit().getTool(name).isReadOnly()).isTrue());
+        }
     }
 }
