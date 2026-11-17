@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -73,6 +74,48 @@ public class SupportReadService {
                         "errorCode", safeErrorCode(rs.getString("error_code"))));
         return Map.of("items", rows.subList(0, Math.min(limit, rows.size())), "truncated", rows.size() > limit,
                 "from", from.toString(), "to", to.toString());
+    }
+
+    public Map<String, Object> integration(SupportRunScope scope) {
+        requireScenario(scope, SupportCase.Scenario.API_AUTHORIZATION);
+        var rows = jdbc.query("""
+                SELECT id, enabled, version,
+                  CASE WHEN jsonb_typeof(permission_snapshot->'grantedScopes')='array'
+                       THEN jsonb_array_length(permission_snapshot->'grantedScopes') END AS scope_count
+                FROM support_integration WHERE tenant_id=:tenant AND id=:resource
+                """, resourceParams(scope), (rs, row) -> {
+            var snapshot = new LinkedHashMap<String, Object>();
+            snapshot.put("integrationRef", rs.getString("id"));
+            snapshot.put("enabled", rs.getBoolean("enabled"));
+            snapshot.put("version", rs.getLong("version"));
+            var count = rs.getObject("scope_count", Integer.class);
+            if (count != null) snapshot.put("grantedScopeCount", count);
+            return snapshot;
+        });
+        if (rows.isEmpty()) throw new SupportException(SupportException.Code.NOT_FOUND_OR_FORBIDDEN);
+        return rows.get(0);
+    }
+
+    public Map<String, Object> apiDenials(SupportRunScope scope) {
+        requireScenario(scope, SupportCase.Scenario.API_AUTHORIZATION);
+        int limit = 10;
+        Instant to = Instant.now();
+        Instant from = to.minus(Duration.ofDays(1));
+        var rows = jdbc.query("""
+                SELECT occurred_at, status_code, error_code FROM support_api_request_log
+                WHERE tenant_id=:tenant AND integration_id=:resource AND status_code IN (401,403)
+                AND occurred_at>=:from AND occurred_at<=:to
+                ORDER BY occurred_at DESC, id LIMIT :limit
+                """, Map.of("tenant", scope.tenantId(), "resource", scope.resourceId(),
+                "from", java.sql.Timestamp.from(from), "to", java.sql.Timestamp.from(to), "limit", limit + 1),
+                (rs, row) -> Map.<String, Object>of("occurredAt", rs.getTimestamp("occurred_at").toInstant().toString(),
+                        "statusCode", rs.getInt("status_code"), "errorCode", safeApiErrorCode(rs.getString("error_code"))));
+        return Map.of("items", rows.subList(0, Math.min(limit, rows.size())), "truncated", rows.size() > limit,
+                "from", from.toString(), "to", to.toString());
+    }
+
+    private static String safeApiErrorCode(String code) {
+        return "TOKEN_EXPIRED".equals(code) || "MISSING_SCOPE".equals(code) ? code : "UNCLASSIFIED";
     }
 
     private void requireScenario(SupportRunScope scope, SupportCase.Scenario expected) {

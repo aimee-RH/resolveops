@@ -28,7 +28,9 @@ import com.nageoffer.ai.ragent.support.access.SupportAccessService;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,6 +52,7 @@ public class SupportDiagnosisValidator {
     }
 
     public Map<String, Object> complete(SupportRunScope scope, String modelFacts) {
+        if (scope.scenario() != SupportCase.Scenario.SUBSCRIPTION_ACTIVATION) throw invalid();
         var diagnosis = parse(modelFacts);
         if (!diagnosis.keySet().equals(Set.of("facts"))) throw invalid();
         var observed = runs.evidence(scope.actorId(), scope.runId());
@@ -85,6 +88,71 @@ public class SupportDiagnosisValidator {
         return validate(scope, diagnosis, observed);
     }
 
+    public Map<String, Object> completeApi(SupportRunScope scope) {
+        if (scope.scenario() != SupportCase.Scenario.API_AUTHORIZATION) throw invalid();
+        var observed = runs.evidence(scope.actorId(), scope.runId());
+        var integration = latestApiEvidence(scope, observed, "INTEGRATION");
+        var denials = latestApiEvidence(scope, observed, "API_DENIALS");
+        List<?> items = denials != null && denials.snapshot().get("items") instanceof List<?> rows ? rows : List.of();
+        List<String> missing = new ArrayList<>();
+        List<String> checks = new ArrayList<>();
+        List<Map<String, Object>> facts = new ArrayList<>();
+        if (integration == null) {
+            missing.add("Current integration status");
+        } else {
+            boolean enabled = Boolean.TRUE.equals(integration.snapshot().get("enabled"));
+            facts.add(apiFact("The integration is " + (enabled ? "enabled." : "disabled."), integration));
+        }
+        if (items.isEmpty()) missing.add("A recent HTTP 401/403 record for this integration");
+        if (denials != null) {
+            var signals = items.stream().filter(Map.class::isInstance).map(Map.class::cast)
+                    .map(row -> "HTTP " + row.get("statusCode") + " (" + row.get("errorCode") + ")")
+                    .distinct().toList();
+            String summary = items.isEmpty() ? "No HTTP 401/403 responses were recorded in the last 24 hours."
+                    : "Recorded denials in the window: " + items.size() + ". Observed responses: " + String.join(", ", signals) + ".";
+            facts.add(apiFact(summary, denials));
+        }
+        if (facts.isEmpty()) {
+            observed.stream().filter(e -> "CASE".equals(e.kind()) && scope.caseId().equals(e.sourceRef())).findFirst()
+                    .ifPresent(e -> facts.add(apiFact("An API authorization case was recorded.", e)));
+        }
+        if (!items.isEmpty()) {
+            boolean expired = apiSignal(items, 401, "TOKEN_EXPIRED");
+            boolean missingScope = apiSignal(items, 403, "MISSING_SCOPE");
+            if (integration != null && Boolean.FALSE.equals(integration.snapshot().get("enabled")))
+                checks.add("The current integration is disabled. Confirm whether that state is expected.");
+            if (expired && missingScope)
+                checks.add("Both expired-token and missing-scope responses were observed. Review the matching requests separately.");
+            else if (expired) checks.add("A 401 record reports an expired token. Verify the credential expiry in the integration settings.");
+            else if (missingScope) checks.add("A 403 record reports a missing scope. Compare the required permission with the recorded grant.");
+            else checks.add("The denial records do not identify a supported reason. Review them with the integration owner.");
+            if (Boolean.TRUE.equals(denials.snapshot().get("truncated")))
+                checks.add("The result is limited to the 10 most recent denials in the window.");
+        }
+        var diagnosis = new LinkedHashMap<String, Object>();
+        diagnosis.put("facts", facts);
+        diagnosis.put("outcome", missing.isEmpty() ? "HANDOFF" : "NEEDS_INFORMATION");
+        diagnosis.put("hypotheses", checks);
+        diagnosis.put("missingInformation", missing);
+        diagnosis.put("recommendedAction", null);
+        diagnosis.put("runbookEvidenceIds", List.of());
+        return validate(scope, diagnosis, observed);
+    }
+
+    private static Map<String, Object> apiFact(String text, SupportRunStore.Evidence evidence) {
+        return Map.of("text", text, "evidenceIds", List.of(evidence.id()));
+    }
+
+    private static SupportRunStore.Evidence latestApiEvidence(SupportRunScope scope, List<SupportRunStore.Evidence> all, String kind) {
+        return all.stream().filter(e -> kind.equals(e.kind()) && scope.resourceId().equals(e.sourceRef()))
+                .reduce((first, last) -> last).orElse(null);
+    }
+
+    private static boolean apiSignal(List<?> items, int status, String error) {
+        return items.stream().anyMatch(item -> item instanceof Map<?, ?> row
+                && Integer.valueOf(status).equals(row.get("statusCode")) && error.equals(row.get("errorCode")));
+    }
+
     public Map<String, Object> validate(SupportRunScope scope, String raw) {
         return validate(scope, parse(raw), runs.evidence(scope.actorId(), scope.runId()));
     }
@@ -103,6 +171,8 @@ public class SupportDiagnosisValidator {
         if (!result.keySet().equals(FIELDS)) throw invalid();
         String outcome = text(result.get("outcome"), 40);
         if (!Set.of("PROPOSE_REPAIR", "NO_ACTION_NEEDED", "NEEDS_INFORMATION", "HANDOFF").contains(outcome)) throw invalid();
+        boolean api = scope.scenario() == SupportCase.Scenario.API_AUTHORIZATION;
+        if (api && !Set.of("NEEDS_INFORMATION", "HANDOFF").contains(outcome)) throw invalid();
         var evidence = observed.stream()
                 .collect(Collectors.toMap(SupportRunStore.Evidence::id, e -> e));
         Set<String> cited = new HashSet<>();
@@ -113,11 +183,16 @@ public class SupportDiagnosisValidator {
             text(fact.get("text"), 500);
             List<String> refs = strings(fact.get("evidenceIds"), 8, 64);
             if (refs.isEmpty() || !evidence.keySet().containsAll(refs)) throw invalid();
+            if (api && refs.stream().map(evidence::get).anyMatch(e -> !(
+                    ("CASE".equals(e.kind()) && scope.caseId().equals(e.sourceRef()))
+                            || (Set.of("INTEGRATION", "API_DENIALS").contains(e.kind()) && scope.resourceId().equals(e.sourceRef())))))
+                throw invalid();
             cited.addAll(refs);
         }
         strings(result.get("hypotheses"), 5, 500);
         List<String> missing = strings(result.get("missingInformation"), 5, 300);
         List<String> manuals = strings(result.get("runbookEvidenceIds"), 5, 64);
+        if (api && !manuals.isEmpty()) throw invalid();
         for (String id : manuals) {
             if (!evidence.containsKey(id) || !"RUNBOOK".equals(evidence.get(id).kind())) throw invalid();
         }
