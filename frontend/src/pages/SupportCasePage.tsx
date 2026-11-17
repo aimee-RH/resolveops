@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
+import { SupportRepairPanel } from "@/components/SupportRepairPanel";
 import { supportService } from "@/services/supportService";
 import type { SupportCase, SupportEvidence, SupportRun, SupportRunEvent } from "@/types/support";
 
 const scenarioName = { SUBSCRIPTION_ACTIVATION: "订阅开通故障", API_AUTHORIZATION: "API 授权故障" };
 const message = (error: unknown) => error instanceof Error ? error.message : "读取失败，请稍后重试";
-const outcomeName = { PROPOSE_REPAIR: "建议修复，需人工复核", NO_ACTION_NEEDED: "无需修复", NEEDS_INFORMATION: "需要补充信息", HANDOFF: "转交人工处理" };
+const outcomeName = { PROPOSE_REPAIR: "建议修复", NO_ACTION_NEEDED: "无需修复", NEEDS_INFORMATION: "需要补充信息", HANDOFF: "转交人工处理" };
 const ongoing = (run: SupportRun) => run.status === "PENDING" || run.status === "RUNNING";
 
 export function SupportCasePage() {
@@ -23,6 +24,7 @@ export function SupportCasePage() {
   const [loading, setLoading] = useState(true);
   const [refresh, setRefresh] = useState(0);
   const [enabled, setEnabled] = useState(false);
+  const [repairEnabled, setRepairEnabled] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const currentCase = useRef(caseId);
   currentCase.current = caseId;
@@ -34,6 +36,7 @@ export function SupportCasePage() {
       if (!current) return;
       setCases(result);
       setEnabled(capabilities.investigationEnabled);
+      setRepairEnabled(capabilities.repairEnabled);
       if (!caseId && result[0]) navigate(`/support/${encodeURIComponent(result[0].id)}`, { replace: true });
       if (!caseId && !result.length) setLoading(false);
     }).catch((cause: unknown) => { if (current) { setError(message(cause)); setLoading(false); } });
@@ -115,7 +118,10 @@ export function SupportCasePage() {
         <div><h1 className="text-xl font-semibold">ResolveOps 支持工作台</h1><p className="text-sm text-muted-foreground">工单、调查记录与可追溯证据</p></div>
         <div className="flex items-center gap-4"><Button variant="outline" onClick={() => setRefresh((value) => value + 1)}>刷新</Button><Link className="text-sm underline" to="/chat">返回聊天</Link></div>
       </header>
-      <p className="border-b bg-muted/40 px-6 py-3 text-sm">{enabled ? "只读调查：根据业务记录与手册生成带来源的诊断。修复建议需要人工审核，当前不执行业务修改。" : "调查暂未启用。可以查看已有工单、调查记录与证据。"}</p>
+      <p className="border-b bg-muted/40 px-6 py-3 text-sm">
+        {enabled ? "只读调查根据业务记录与手册生成带来源的诊断。" : "可以查看已有工单、调查记录与证据。"}
+        {repairEnabled && " 修复须由另一名有权限的人员审批，再由发起人执行。"}
+      </p>
       {error && <p role="alert" className="m-6 rounded border border-destructive p-4 text-destructive">{error}</p>}
       <div className="grid gap-6 p-6 lg:grid-cols-[260px_1fr_340px]">
         <nav aria-label="工单列表" className="space-y-3">
@@ -160,6 +166,8 @@ export function SupportCasePage() {
                   <p className="break-all text-xs text-muted-foreground">证据：{fact.evidenceIds.join("、")}</p></div>)}
                 {selectedRun.diagnosis?.hypotheses?.map((item, index) => <p key={index} className="mt-2 text-sm">待验证：{item}</p>)}
                 {selectedRun.diagnosis?.missingInformation?.map((item, index) => <p key={index} className="mt-2 text-sm">待补充：{item}</p>)}
+                {repairEnabled && selectedRun.status === "COMPLETED" && selectedRun.diagnosis?.outcome === "PROPOSE_REPAIR" &&
+                  <SupportRepairPanel key={selectedRun.id} runId={selectedRun.id} />}
               </div>}
               {events.length > 0 && <ol className="space-y-2 text-sm">{events.map((event) => <li key={event.sequence} className="rounded border p-3">{event.type}<pre className="mt-2 whitespace-pre-wrap break-words text-xs">{JSON.stringify(event.payload, null, 2)}</pre></li>)}</ol>}
             </div>

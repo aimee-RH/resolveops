@@ -42,3 +42,22 @@ export interface SupportRunEvent {
   type: string;
   payload: Record<string, unknown>;
 }
+
+export interface SupportRepair {
+  canPropose: boolean;
+  canReview: boolean;
+  canExecute: boolean;
+  proposal: {
+    id: string;
+    targetId: string;
+    expectedVersion: number;
+    paymentEventId: string;
+    failureEventId: string;
+    runbookEvidenceId: string;
+    expiresAt: string;
+    payloadHash: string;
+    status: string;
+    approverId: string | null;
+    receipt: { operationId: string; eventId: string; subscriptionVersion: number; activationState: string } | null;
+  } | null;
+}
