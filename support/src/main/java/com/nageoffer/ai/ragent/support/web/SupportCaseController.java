@@ -39,12 +39,15 @@ public class SupportCaseController {
     private final SupportAccessService access;
     private final SupportRunStore runs;
     private final boolean investigationEnabled;
+    private final boolean repairEnabled;
 
     public SupportCaseController(SupportAccessService access, SupportRunStore runs,
-                                 @Value("${support.investigation.enabled:false}") boolean investigationEnabled) {
+                                 @Value("${support.investigation.enabled:false}") boolean investigationEnabled,
+                                 @Value("${support.repair.enabled:false}") boolean repairEnabled) {
         this.access = access;
         this.runs = runs;
         this.investigationEnabled = investigationEnabled;
+        this.repairEnabled = repairEnabled;
     }
 
     public static String actor() {
@@ -59,7 +62,7 @@ public class SupportCaseController {
     @GetMapping("/capabilities")
     public Result<Map<String, Boolean>> capabilities() {
         actor();
-        return Results.success(Map.of("investigationEnabled", investigationEnabled));
+        return Results.success(Map.of("investigationEnabled", investigationEnabled, "repairEnabled", repairEnabled));
     }
 
     @GetMapping("/cases/{caseId}")

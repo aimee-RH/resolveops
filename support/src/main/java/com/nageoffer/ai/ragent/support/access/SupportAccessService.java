@@ -56,6 +56,30 @@ public class SupportAccessService {
         return cases.get(0);
     }
 
+    /** Call within the repair transaction. Lock the case and matching grants against concurrent changes. */
+    public SupportCase lockCase(String actorId, String caseId, Permission permission) {
+        var supportCase = requireCase(actorId, caseId, permission);
+        var locked = jdbc.query("SELECT * FROM support_case WHERE id=:id AND tenant_id=:tenant FOR SHARE",
+                Map.of("id", caseId, "tenant", supportCase.tenantId()), CASE_MAPPER);
+        if (locked.isEmpty()) throw new SupportException(SupportException.Code.NOT_FOUND_OR_FORBIDDEN);
+        lockGrant(actorId, supportCase.tenantId(), permission);
+        return locked.get(0);
+    }
+
+    public void lockGrant(String actorId, String tenantId, Permission permission) {
+        var grants = jdbc.queryForList("""
+                SELECT role FROM support_access_grant WHERE tenant_id=:tenant AND user_id=:actor
+                AND role IN (:roles) ORDER BY role FOR SHARE
+                """, Map.of("tenant", tenantId, "actor", actorId, "roles", permission.roles), String.class);
+        if (grants.isEmpty()) throw new SupportException(SupportException.Code.NOT_FOUND_OR_FORBIDDEN);
+    }
+
+    public boolean hasGrant(String actorId, String tenantId, Permission permission) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("""
+                SELECT EXISTS (SELECT 1 FROM support_access_grant WHERE tenant_id=:tenant AND user_id=:actor AND role IN (:roles))
+                """, Map.of("tenant", tenantId, "actor", actorId, "roles", permission.roles), Boolean.class));
+    }
+
     public List<SupportCase> listCases(String actorId) {
         requireActor(actorId);
         return jdbc.query("""

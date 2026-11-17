@@ -169,7 +169,7 @@ class SupportInvestigationIntegrationTest {
     }
 
     private MockMvc mvc() {
-        return MockMvcBuilders.standaloneSetup(new SupportRunController(service), new SupportCaseController(access, runs, true))
+        return MockMvcBuilders.standaloneSetup(new SupportRunController(service), new SupportCaseController(access, runs, true, false))
                 .setControllerAdvice(new SupportExceptionAdvice()).build();
     }
 

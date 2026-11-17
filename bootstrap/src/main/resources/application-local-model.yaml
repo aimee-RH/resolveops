@@ -2,6 +2,8 @@
 support:
   investigation:
     enabled: ${RESOLVEOPS_INVESTIGATION_ENABLED:false}
+  repair:
+    enabled: ${RESOLVEOPS_REPAIR_ENABLED:false}
 
 agent:
   chat:

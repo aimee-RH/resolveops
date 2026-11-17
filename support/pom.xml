@@ -44,7 +44,10 @@
             <resource>
                 <directory>../resources/database/upgrades/v2.0.0</directory>
                 <targetPath>db</targetPath>
-                <includes><include>261102_support_domain.sql</include></includes>
+                <includes>
+                    <include>261102_support_domain.sql</include>
+                    <include>261117_support_repair.sql</include>
+                </includes>
             </resource>
         </resources>
     </build>

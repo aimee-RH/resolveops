@@ -54,7 +54,8 @@ abstract class PostgresFixture {
         Properties properties = new Properties();
         properties.setProperty("currentSchema", schema);
         source.setConnectionProperties(properties);
-        new ResourceDatabasePopulator(new ClassPathResource("db/261102_support_domain.sql")).execute(source);
+        new ResourceDatabasePopulator(new ClassPathResource("db/261102_support_domain.sql"),
+                new ClassPathResource("db/261117_support_repair.sql")).execute(source);
         sql = new JdbcTemplate(source);
         jdbc = new NamedParameterJdbcTemplate(source);
         seed();

@@ -1183,3 +1183,9 @@ CREATE TABLE IF NOT EXISTS support_audit_event (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id, case_id) REFERENCES support_case(tenant_id, id)
 );
+
+ALTER TABLE support_action_proposal
+    ADD COLUMN IF NOT EXISTS expected_case_version BIGINT,
+    ADD COLUMN IF NOT EXISTS failure_event_id VARCHAR(64) REFERENCES support_subscription_event(id);
+CREATE UNIQUE INDEX IF NOT EXISTS support_action_proposal_run ON support_action_proposal(run_id);
+CREATE UNIQUE INDEX IF NOT EXISTS support_action_operation_proposal ON support_action_operation(proposal_id);
