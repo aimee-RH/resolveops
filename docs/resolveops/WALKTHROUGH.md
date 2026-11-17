@@ -12,5 +12,6 @@ Follow the small commits in [PR #1](https://github.com/aimee-RH/resolveops/pull/
 8. Run the indexed test in [the runbook guide](RUNBOOKS.md). Show why the same retrieved text produces handoff until the exact document and hash are registered. Explain which fields the model writes and which ones the backend decides.
 9. Open `/support` only after a normal Ragent login and proper database initialization. Describe empty, unauthorized and failed states; no synthetic investigation is presented as real.
 10. Reproduce the [repair checks](REPAIR.md). Explain why approval and execution are separate, which version prevents races, how a lost response is recovered, and why the audit failure rolls back the subscription update.
+11. Reproduce the three [API investigation probes](API_INVESTIGATION.md). Show which tool and evidence kinds change, and explain why the API diagnosis states a recorded observation and asks for missing evidence when the window is empty.
 
 Use the [investigation record](INVESTIGATION.md) to walk through tool calling, fact generation, citation validation and backend policy. Explain what the development probes establish and what a held-out evaluation would measure.

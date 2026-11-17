@@ -12,10 +12,10 @@ A SaaS support workbench extending [Ragent](https://github.com/nageoffer/ragent)
 - Bounded per-run investigators, submit/cancel endpoints and a polling workbench; citations and repair preconditions are checked by the backend.
 - Model-written facts cite persisted evidence. Backend rules choose no action, handoff, or a repair suggestion based on subscription status, events, and a registered runbook hash.
 - Approval tied to an immutable proposal and its expiry. A separate human execution step rechecks current permissions and versions and returns a verified PostgreSQL receipt.
-- Fifty-two engineering checks, full-reactor compilation and frontend type/build checks.
+- Read-only API authorization triage using integration status and bounded 401/403 history.
 - An opt-in local Qwen3 4B generation profile with a checked deployment recipe, a configuration check and two real-model compatibility checks using synthetic business services.
 
-The local investigation checks use Llama 3.2 3B with PostgreSQL and pgvector on synthetic subscription cases. A paired runbook test checks handoff before exact content registration and a repair suggestion afterward. PostgreSQL tests cover authorized repair, concurrent requests, retry and rollback. The second support scenario, held-out evaluation and full browser walkthrough are tracked in [verification status](docs/resolveops/STATUS.md).
+The local investigation checks use Llama 3.2 3B and PostgreSQL on synthetic cases. The subscription probe also uses pgvector to compare handoff and repair suggestions before and after runbook registration. PostgreSQL tests cover authorized repair, concurrency, retry and rollback. See the [verification status](docs/resolveops/STATUS.md) for held-out evaluation and browser acceptance.
 
 ## Development and evidence
 
@@ -24,6 +24,7 @@ The local investigation checks use Llama 3.2 3B with PostgreSQL and pgvector on 
 - [Investigation lifecycle, actual probes and failure analysis](docs/resolveops/INVESTIGATION.md)
 - [Local runbook ingestion, retrieval and repair suggestion](docs/resolveops/RUNBOOKS.md)
 - [Human approval, execution and failure checks](docs/resolveops/REPAIR.md)
+- [API authorization investigation and checks](docs/resolveops/API_INVESTIGATION.md)
 - [Green-light requirements](docs/resolveops/GREEN_LIGHTS.md)
 - [Actual verification status](docs/resolveops/STATUS.md)
 - [Owner walkthrough](docs/resolveops/WALKTHROUGH.md)
@@ -34,7 +35,7 @@ Work is split into small commits on `codex/resolveops`, reviewed through [draft 
 
 ## Scope
 
-The primary flow investigates paid-but-not-activated subscriptions and supports explicitly approved, server-validated local repairs. A second read-only API authorization flow will test reuse of the case/run/evidence infrastructure.
+The subscription flow investigates paid-but-not-activated subscriptions and supports approved local repairs. API authorization investigation uses the same workbench, runs, and evidence.
 
 ## Upstream attribution
 

@@ -5,11 +5,11 @@ This file records checks, not planned capabilities.
 | Gate | Status | Evidence / next requirement |
 |---|---|---|
 | G0 | GREEN | Public fork and pinned base verified. Small commits pushed to `codex/resolveops`; draft [PR #1](https://github.com/aimee-RH/resolveops/pull/1) targets this fork's main. Existing Git credentials work; connector write is not needed. |
-| G1 | GREEN (local) | 52 engineering checks pass. The four opt-in investigation checks are skipped by default. All nine Maven modules compile. The updated frontend passes strict TypeScript and production build. [Remote checks](https://github.com/aimee-RH/resolveops/pull/1/checks) |
+| G1 | GREEN (local) | 56 engineering checks pass. Five opt-in investigation checks are skipped by default. All nine Maven modules compile. The updated frontend passes strict TypeScript and production build. [Remote checks](https://github.com/aimee-RH/resolveops/pull/1/checks) |
 | G2 | GREEN (read boundary) | Native PostgreSQL tests cover tenant grants, forged/revoked scope, request deduplication, immutable evidence, diagnosis citations and missing identity. HTTP checks supply the trusted upstream login context; full browser-to-SaToken login is not exercised. |
 | G3 | GREEN (local development probes) | Local Llama 3.2 3B calls the scoped tools. Real Nomic embeddings and pgvector retrieve indexed runbooks. The active, unavailable, unregistered and registered cases have recorded outcomes and manually checked fact citations. The backend selects the outcome and any suggestion. [Runbook setup and probes](RUNBOOKS.md) · [Raw records](evidence/investigation-v9.json) |
 | G4 | GREEN (local PostgreSQL and HTTP) | Immutable proposal, separate approver, expiry, scoped rechecks, one verified repair receipt and atomic audit. Eight tests cover HTTP permissions, stale and revoked approvals, concurrency, lost responses and rollback. [Repair setup and checks](REPAIR.md) |
-| G5 | PLANNED | API integration/log tables reserved; its investigation tools and flow are not implemented. |
+| G5 | GREEN (local PostgreSQL and model probes) | Read-only API authorization investigation reuses the workbench, runs and evidence. PostgreSQL tests cover tenant and resource scope, safe projection, and incomplete data. Three local model probes cover 401, 403 and an empty window. [API investigation checks](API_INVESTIGATION.md) |
 | G6 | PLANNED | Versioned held-out tasks, an evaluation runner and comparative metrics remain pending. |
 | G7 | PLANNED | Owner walkthrough, live workbench acceptance, user feedback and actual outcome metrics pending. |
 
@@ -23,7 +23,7 @@ npx tsc --noEmit -p tsconfig.app.json
 npm run build
 ```
 
-52 passing checks comprise 44 existing engineering checks and eight PostgreSQL-backed repair checks in `SupportRepairTest`. The November 10 four opt-in investigation checks passed with the [runbook test flags](RUNBOOKS.md). Three of those checks cover four real-model runs, and one uses a deliberate cancellation fault.
+56 passing engineering checks include eight PostgreSQL repair checks and four API authorization checks. The five opt-in integration checks cover four subscription investigation runs, three API investigation runs and a cancellation fault with a substituted model stream.
 
 ## Current limits
 
@@ -48,4 +48,8 @@ The original G3 requirements are met on the four recorded local development runs
 
 ## Controlled repair increment (2026-11-17)
 
-An Operator creates a versioned proposal from a completed investigation, a second user with the Approver grant makes the decision, and the Operator executes it. PostgreSQL tests validate version and permission checks, retries, a concurrent repair race and an injected audit failure after the subscription update. The write updates the local synthetic subscription and preserves the original investigation evidence. G5, G6 and G7 remain open. [Walkthrough and verification](REPAIR.md)
+An Operator creates a versioned proposal from a completed investigation, a second user with the Approver grant makes the decision, and the Operator executes it. PostgreSQL tests validate version and permission checks, retries, a concurrent repair race and an injected audit failure after the subscription update. The write updates the local synthetic subscription and preserves the original investigation evidence. [Walkthrough and verification](REPAIR.md)
+
+## API authorization increment (2026-11-17)
+
+The API investigator reads safe evidence for the current integration. The backend formats cited observations and routes recognized denials to human review or asks for missing evidence. The tests exercise the second scenario against synthetic records through the existing HTTP investigation flow. G6 evaluation and G7 full browser acceptance remain open. [Implementation and verification](API_INVESTIGATION.md)

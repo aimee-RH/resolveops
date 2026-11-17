@@ -1,0 +1,435 @@
+{
+  "date": "2026-11-17",
+  "database": "PostgreSQL 17.11",
+  "model": "resolveops-llama:3b",
+  "ollamaVersion": "0.40.13",
+  "implementationSha256": {
+    "agent/src/main/java/com/nageoffer/ai/ragent/agent/support/SupportAgentProvider.java": "379a8b2b2d1f5a7170cec6f042af83909e944e7fe1807847d2c8d7d8b809013e",
+    "agent/src/main/java/com/nageoffer/ai/ragent/agent/support/SupportReadTools.java": "514312039ec289e4f6bc629df714de771dfa99d1cebf2ff25d7f6f2cbe482624",
+    "agent/src/main/java/com/nageoffer/ai/ragent/agent/support/SupportRunService.java": "e82658a362d63bee1fe5f79f347769e4b4b9c91ff7730ae2b2692438e6e66a8f",
+    "support/src/main/java/com/nageoffer/ai/ragent/support/casework/SupportReadService.java": "ee4b8a46a053caa72643a116e7b665ff12544d8e10b517c3a95eaff174a46c22",
+    "support/src/main/java/com/nageoffer/ai/ragent/support/run/SupportDiagnosisValidator.java": "e871f4c75b6802d9b0469cc179b052ad3a73d8cacc280eef030de47488e0a436"
+  },
+  "scope": "Real local tool calls with synthetic records and test authentication. Facts and routing are deterministic. These cases are development probes.",
+  "records": {
+    "api-x": {
+      "events": [
+        {
+          "payload": {},
+          "sequence": 1,
+          "type": "INVESTIGATION_STARTED"
+        },
+        {
+          "payload": {
+            "evidenceIds": [
+              "e6a411f2-6139-4d6b-bc50-03c597b2ca57"
+            ],
+            "tool": "get_case_context"
+          },
+          "sequence": 2,
+          "type": "TOOL_COMPLETED"
+        },
+        {
+          "payload": {
+            "evidenceIds": [
+              "0101edc8-94dc-4b62-bb51-807068277720"
+            ],
+            "tool": "get_integration_status"
+          },
+          "sequence": 3,
+          "type": "TOOL_COMPLETED"
+        },
+        {
+          "payload": {
+            "evidenceIds": [
+              "4d23c146-4d30-4768-91a8-1a691141b985"
+            ],
+            "tool": "list_api_denials"
+          },
+          "sequence": 4,
+          "type": "TOOL_COMPLETED"
+        },
+        {
+          "payload": {
+            "attempt": 1,
+            "source": "RULES"
+          },
+          "sequence": 5,
+          "type": "DIAGNOSIS_STARTED"
+        },
+        {
+          "payload": {
+            "status": "COMPLETED"
+          },
+          "sequence": 6,
+          "type": "INVESTIGATION_COMPLETED"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "e6a411f2-6139-4d6b-bc50-03c597b2ca57",
+          "kind": "CASE",
+          "sourceRef": "api-x",
+          "version": null,
+          "hash": "26852218f29762cfbdcf244486385c8a27cd7fafe74a376311e56dd4cf7b9e34",
+          "observedAt": 1794949069.777334,
+          "snapshot": {
+            "caseId": "api-x",
+            "description": "Customer reports trouble with the integration",
+            "resourceRef": "service-x",
+            "scenario": "API_AUTHORIZATION"
+          }
+        },
+        {
+          "id": "0101edc8-94dc-4b62-bb51-807068277720",
+          "kind": "INTEGRATION",
+          "sourceRef": "service-x",
+          "version": "1",
+          "hash": "4a3f354830880cacde08833361a13e785ee19c74e072a0d7bf3c3fc5f77dcc16",
+          "observedAt": 1794949069.780512,
+          "snapshot": {
+            "enabled": true,
+            "grantedScopeCount": 1,
+            "integrationRef": "service-x",
+            "version": 1
+          }
+        },
+        {
+          "id": "4d23c146-4d30-4768-91a8-1a691141b985",
+          "kind": "API_DENIALS",
+          "sourceRef": "service-x",
+          "version": null,
+          "hash": "d42ffd5c9920409fff7abc4a2ce00872b29fe916b38537d1e2209c27e4459c90",
+          "observedAt": 1794949069.780825,
+          "snapshot": {
+            "from": "2026-11-16T20:57:49.769299Z",
+            "items": [
+              {
+                "errorCode": "TOKEN_EXPIRED",
+                "occurredAt": "2026-11-17T20:57:46.941779Z",
+                "statusCode": 401
+              }
+            ],
+            "to": "2026-11-17T20:57:49.769299Z",
+            "truncated": false
+          }
+        }
+      ],
+      "run": {
+        "id": "256b2ddf-8eb9-4a41-9cde-b70bf8dfec6c",
+        "caseId": "api-x",
+        "actorId": "operator",
+        "status": "COMPLETED",
+        "diagnosis": {
+          "facts": [
+            {
+              "evidenceIds": [
+                "0101edc8-94dc-4b62-bb51-807068277720"
+              ],
+              "text": "The integration is enabled."
+            },
+            {
+              "evidenceIds": [
+                "4d23c146-4d30-4768-91a8-1a691141b985"
+              ],
+              "text": "Recorded denials in the window: 1. Observed responses: HTTP 401 (TOKEN_EXPIRED)."
+            }
+          ],
+          "hypotheses": [
+            "A 401 record reports an expired token. Verify the credential expiry in the integration settings."
+          ],
+          "missingInformation": [],
+          "outcome": "HANDOFF",
+          "recommendedAction": null,
+          "runbookEvidenceIds": []
+        },
+        "config": {
+          "mode": "support-investigation-v1",
+          "model": "resolveops-llama:3b",
+          "promptVersion": "support-api-v2",
+          "question": "Investigate this case using current evidence.",
+          "toolVersion": "support-api-read-v1"
+        },
+        "startedAt": 1794949067.551233,
+        "finishedAt": 1794949074.20929
+      }
+    },
+    "api-y": {
+      "events": [
+        {
+          "payload": {},
+          "sequence": 7,
+          "type": "INVESTIGATION_STARTED"
+        },
+        {
+          "payload": {
+            "evidenceIds": [
+              "6a5fa201-07e0-4ea5-b482-98f700845e18"
+            ],
+            "tool": "get_case_context"
+          },
+          "sequence": 8,
+          "type": "TOOL_COMPLETED"
+        },
+        {
+          "payload": {
+            "evidenceIds": [
+              "5101d4ce-d8ac-4966-b852-ee9598471739"
+            ],
+            "tool": "list_api_denials"
+          },
+          "sequence": 9,
+          "type": "TOOL_COMPLETED"
+        },
+        {
+          "payload": {
+            "evidenceIds": [
+              "c168a548-1349-46e8-b2cb-7381a99bc900"
+            ],
+            "tool": "get_integration_status"
+          },
+          "sequence": 10,
+          "type": "TOOL_COMPLETED"
+        },
+        {
+          "payload": {
+            "attempt": 1,
+            "source": "RULES"
+          },
+          "sequence": 11,
+          "type": "DIAGNOSIS_STARTED"
+        },
+        {
+          "payload": {
+            "status": "COMPLETED"
+          },
+          "sequence": 12,
+          "type": "INVESTIGATION_COMPLETED"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "6a5fa201-07e0-4ea5-b482-98f700845e18",
+          "kind": "CASE",
+          "sourceRef": "api-y",
+          "version": null,
+          "hash": "04b37f86254710d37b681586622e4024afb161990a0e7ad3d342bf4b321d203d",
+          "observedAt": 1794949075.494712,
+          "snapshot": {
+            "caseId": "api-y",
+            "description": "Customer reports trouble with the integration",
+            "resourceRef": "service-y",
+            "scenario": "API_AUTHORIZATION"
+          }
+        },
+        {
+          "id": "c168a548-1349-46e8-b2cb-7381a99bc900",
+          "kind": "INTEGRATION",
+          "sourceRef": "service-y",
+          "version": "1",
+          "hash": "0073d45bdb3d28c4afce3becd556a2923ab00c231b527997a0cfc673a9214919",
+          "observedAt": 1794949075.497221,
+          "snapshot": {
+            "enabled": true,
+            "grantedScopeCount": 0,
+            "integrationRef": "service-y",
+            "version": 1
+          }
+        },
+        {
+          "id": "5101d4ce-d8ac-4966-b852-ee9598471739",
+          "kind": "API_DENIALS",
+          "sourceRef": "service-y",
+          "version": null,
+          "hash": "166c73dbcd45f7da3827badf2af839978969d7155c254a08c405fea0528933e0",
+          "observedAt": 1794949075.497242,
+          "snapshot": {
+            "from": "2026-11-16T20:57:55.488825Z",
+            "items": [
+              {
+                "errorCode": "MISSING_SCOPE",
+                "occurredAt": "2026-11-17T20:57:46.941967Z",
+                "statusCode": 403
+              }
+            ],
+            "to": "2026-11-17T20:57:55.488825Z",
+            "truncated": false
+          }
+        }
+      ],
+      "run": {
+        "id": "ac211947-9370-4fe6-ab78-fae4971fd71d",
+        "caseId": "api-y",
+        "actorId": "operator",
+        "status": "COMPLETED",
+        "diagnosis": {
+          "facts": [
+            {
+              "evidenceIds": [
+                "c168a548-1349-46e8-b2cb-7381a99bc900"
+              ],
+              "text": "The integration is enabled."
+            },
+            {
+              "evidenceIds": [
+                "5101d4ce-d8ac-4966-b852-ee9598471739"
+              ],
+              "text": "Recorded denials in the window: 1. Observed responses: HTTP 403 (MISSING_SCOPE)."
+            }
+          ],
+          "hypotheses": [
+            "A 403 record reports a missing scope. Compare the required permission with the recorded grant."
+          ],
+          "missingInformation": [],
+          "outcome": "HANDOFF",
+          "recommendedAction": null,
+          "runbookEvidenceIds": []
+        },
+        "config": {
+          "mode": "support-investigation-v1",
+          "model": "resolveops-llama:3b",
+          "promptVersion": "support-api-v2",
+          "question": "Investigate this case using current evidence.",
+          "toolVersion": "support-api-read-v1"
+        },
+        "startedAt": 1794949074.360946,
+        "finishedAt": 1794949082.221103
+      }
+    },
+    "api-z": {
+      "events": [
+        {
+          "payload": {},
+          "sequence": 13,
+          "type": "INVESTIGATION_STARTED"
+        },
+        {
+          "payload": {
+            "evidenceIds": [
+              "7f3703d9-896b-4ba2-852b-f17db34dfb24"
+            ],
+            "tool": "get_case_context"
+          },
+          "sequence": 14,
+          "type": "TOOL_COMPLETED"
+        },
+        {
+          "payload": {
+            "evidenceIds": [
+              "730bf938-c78b-4a5e-8c85-3d77b286159c"
+            ],
+            "tool": "get_integration_status"
+          },
+          "sequence": 15,
+          "type": "TOOL_COMPLETED"
+        },
+        {
+          "payload": {
+            "evidenceIds": [
+              "a1ae23ec-2882-47d8-bba0-ad3b8d25bb03"
+            ],
+            "tool": "list_api_denials"
+          },
+          "sequence": 16,
+          "type": "TOOL_COMPLETED"
+        },
+        {
+          "payload": {
+            "attempt": 1,
+            "source": "RULES"
+          },
+          "sequence": 17,
+          "type": "DIAGNOSIS_STARTED"
+        },
+        {
+          "payload": {
+            "status": "COMPLETED"
+          },
+          "sequence": 18,
+          "type": "INVESTIGATION_COMPLETED"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "7f3703d9-896b-4ba2-852b-f17db34dfb24",
+          "kind": "CASE",
+          "sourceRef": "api-z",
+          "version": null,
+          "hash": "caea4f0d8e90f0456ba40a8fe2d84ed3beb1ec1dd2ffadcd96e55f8da787bcd8",
+          "observedAt": 1794949083.606507,
+          "snapshot": {
+            "caseId": "api-z",
+            "description": "Customer reports trouble with the integration",
+            "resourceRef": "service-z",
+            "scenario": "API_AUTHORIZATION"
+          }
+        },
+        {
+          "id": "730bf938-c78b-4a5e-8c85-3d77b286159c",
+          "kind": "INTEGRATION",
+          "sourceRef": "service-z",
+          "version": "1",
+          "hash": "8f76307ce496e5aa17b5fc831bd9ae0bf242ba556289b4e3359fc0135fae80e7",
+          "observedAt": 1794949083.608947,
+          "snapshot": {
+            "enabled": true,
+            "integrationRef": "service-z",
+            "version": 1
+          }
+        },
+        {
+          "id": "a1ae23ec-2882-47d8-bba0-ad3b8d25bb03",
+          "kind": "API_DENIALS",
+          "sourceRef": "service-z",
+          "version": null,
+          "hash": "09202e97cfef8558aa2a44f0644d59b3ab801cb91ae21f9b9c43be44aa63fdd1",
+          "observedAt": 1794949083.608949,
+          "snapshot": {
+            "from": "2026-11-16T20:58:03.600981Z",
+            "items": [],
+            "to": "2026-11-17T20:58:03.600981Z",
+            "truncated": false
+          }
+        }
+      ],
+      "run": {
+        "id": "89c43a69-87a3-474d-bcd3-a4fb23bbae53",
+        "caseId": "api-z",
+        "actorId": "operator",
+        "status": "COMPLETED",
+        "diagnosis": {
+          "facts": [
+            {
+              "evidenceIds": [
+                "730bf938-c78b-4a5e-8c85-3d77b286159c"
+              ],
+              "text": "The integration is enabled."
+            },
+            {
+              "evidenceIds": [
+                "a1ae23ec-2882-47d8-bba0-ad3b8d25bb03"
+              ],
+              "text": "No HTTP 401/403 responses were recorded in the last 24 hours."
+            }
+          ],
+          "hypotheses": [],
+          "missingInformation": [
+            "A recent HTTP 401/403 record for this integration"
+          ],
+          "outcome": "NEEDS_INFORMATION",
+          "recommendedAction": null,
+          "runbookEvidenceIds": []
+        },
+        "config": {
+          "mode": "support-investigation-v1",
+          "model": "resolveops-llama:3b",
+          "promptVersion": "support-api-v2",
+          "question": "Investigate this case using current evidence.",
+          "toolVersion": "support-api-read-v1"
+        },
+        "startedAt": 1794949082.468778,
+        "finishedAt": 1794949087.904256
+      }
+    }
+  }
+}
