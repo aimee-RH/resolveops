@@ -15,7 +15,7 @@ A SaaS support workbench extending [Ragent](https://github.com/nageoffer/ragent)
 - Read-only API authorization triage using integration status and bounded 401/403 history.
 - An opt-in local Qwen3 4B generation profile with a checked deployment recipe, a configuration check and two real-model compatibility checks using synthetic business services.
 
-The local investigation checks use Llama 3.2 3B and PostgreSQL on synthetic cases. The subscription probe also uses pgvector to compare handoff and repair suggestions before and after runbook registration. PostgreSQL tests cover authorized repair, concurrency, retry and rollback. See the [verification status](docs/resolveops/STATUS.md) for held-out evaluation and browser acceptance.
+The local investigation checks use Llama 3.2 3B and PostgreSQL on synthetic cases. The subscription probe also uses pgvector to compare handoff and repair suggestions before and after runbook registration. PostgreSQL tests cover authorized repair, concurrency, retry and rollback. A paired evaluation compares the model baseline with backend policy on frozen synthetic evidence.
 
 ## Development and evidence
 
@@ -25,6 +25,7 @@ The local investigation checks use Llama 3.2 3B and PostgreSQL on synthetic case
 - [Local runbook ingestion, retrieval and repair suggestion](docs/resolveops/RUNBOOKS.md)
 - [Human approval, execution and failure checks](docs/resolveops/REPAIR.md)
 - [API authorization investigation and checks](docs/resolveops/API_INVESTIGATION.md)
+- [Paired diagnosis evaluation and reproduction](docs/resolveops/EVALUATION.md)
 - [Green-light requirements](docs/resolveops/GREEN_LIGHTS.md)
 - [Actual verification status](docs/resolveops/STATUS.md)
 - [Owner walkthrough](docs/resolveops/WALKTHROUGH.md)
