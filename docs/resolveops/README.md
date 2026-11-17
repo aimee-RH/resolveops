@@ -18,4 +18,4 @@ See [green lights](GREEN_LIGHTS.md), [contribution boundaries](CONTRIBUTIONS.md)
 
 ## First deliverable
 
-Two synthetic customer tenants, authenticated case access, bounded read-only business tools, and a traceable diagnosis. The model connection remains opt-in until configured by the owner. Approval and repair are separate later increments.
+Two synthetic customer tenants, authenticated case access, bounded read-only business tools, and a traceable diagnosis. The subscription repair workflow uses a separate human approval and execution step. [Local repair setup](REPAIR.md)

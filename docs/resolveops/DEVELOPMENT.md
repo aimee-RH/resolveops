@@ -24,3 +24,5 @@ The page is at `/support`, with a link in the Agent sidebar. Use the existing Ra
 The optional Compose file is a business-domain database, not the complete upstream runtime. Live Ragent operation still needs its documented authentication/cache/storage configuration and pgvector for the support runbook adapter. This milestone verified module compilation, service/HTTP boundaries and frontend build, not a complete deployed login-to-model flow.
 
 Investigation submit/cancel endpoints are opt-in through `support.investigation.enabled`. Histories, suggestions and evidence come from persisted records. Complete application login and storage are required for the browser walkthrough. [Investigation lifecycle and development probes](INVESTIGATION.md)
+
+Existing databases need the G4 SQL migration before enabling `support.repair.enabled`. [Repair migration, settings and checks](REPAIR.md)

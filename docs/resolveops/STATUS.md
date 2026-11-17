@@ -5,10 +5,10 @@ This file records checks, not planned capabilities.
 | Gate | Status | Evidence / next requirement |
 |---|---|---|
 | G0 | GREEN | Public fork and pinned base verified. Small commits pushed to `codex/resolveops`; draft [PR #1](https://github.com/aimee-RH/resolveops/pull/1) targets this fork's main. Existing Git credentials work; connector write is not needed. |
-| G1 | GREEN (local) | 44 engineering checks pass. The four opt-in investigation checks are skipped by default. All nine Maven modules compile. The updated frontend passes strict TypeScript and production build. [Remote checks](https://github.com/aimee-RH/resolveops/pull/1/checks) |
+| G1 | GREEN (local) | 52 engineering checks pass. The four opt-in investigation checks are skipped by default. All nine Maven modules compile. The updated frontend passes strict TypeScript and production build. [Remote checks](https://github.com/aimee-RH/resolveops/pull/1/checks) |
 | G2 | GREEN (read boundary) | Native PostgreSQL tests cover tenant grants, forged/revoked scope, request deduplication, immutable evidence, diagnosis citations and missing identity. HTTP checks supply the trusted upstream login context; full browser-to-SaToken login is not exercised. |
 | G3 | GREEN (local development probes) | Local Llama 3.2 3B calls the scoped tools. Real Nomic embeddings and pgvector retrieve indexed runbooks. The active, unavailable, unregistered and registered cases have recorded outcomes and manually checked fact citations. The backend selects the outcome and any suggestion. [Runbook setup and probes](RUNBOOKS.md) · [Raw records](evidence/investigation-v9.json) |
-| G4 | PLANNED | Tables reserved; proposal/approval/execution services and write endpoints are not implemented. |
+| G4 | GREEN (local PostgreSQL and HTTP) | Immutable proposal, separate approver, expiry, scoped rechecks, one verified repair receipt and atomic audit. Eight tests cover HTTP permissions, stale and revoked approvals, concurrency, lost responses and rollback. [Repair setup and checks](REPAIR.md) |
 | G5 | PLANNED | API integration/log tables reserved; its investigation tools and flow are not implemented. |
 | G6 | PLANNED | Versioned held-out tasks, an evaluation runner and comparative metrics remain pending. |
 | G7 | PLANNED | Owner walkthrough, live workbench acceptance, user feedback and actual outcome metrics pending. |
@@ -23,11 +23,11 @@ npx tsc --noEmit -p tsconfig.app.json
 npm run build
 ```
 
-Passing checks: SupportSchemaTest (2), SupportAccessTest (4), SupportRunStoreTest (3), SupportHttpTest (3), SupportDiagnosisValidatorTest (4), RunbookEvidenceSearchTest (3), SupportReadToolsTest (6), SupportRunServiceTest (6), SupportAgentProviderTest (1), LocalModelConfigurationTest (1), upstream ReActAgentProviderTest (11): 44 total. The four opt-in investigation checks also passed with the [runbook test flags](RUNBOOKS.md). Three of those checks cover four real-model investigation runs, and one uses a deliberate cancellation fault.
+52 passing checks comprise 44 existing engineering checks and eight PostgreSQL-backed repair checks in `SupportRepairTest`. The November 10 four opt-in investigation checks passed with the [runbook test flags](RUNBOOKS.md). Three of those checks cover four real-model runs, and one uses a deliberate cancellation fault.
 
 ## Current limits
 
-- The workbench can submit/cancel and poll opt-in investigations. The feature is disabled by default and requires existing application infrastructure; full logged-in browser acceptance is pending. There is no approval/repair action.
+- The workbench supports opt-in investigations and opt-in approval and repair. Full logged-in browser acceptance is pending.
 - The support investigator uses its own four read tools and per-run state. General Ragent chat behavior is unchanged. Collection and evidence-only structured finalization reuse AgentScope's runtime.
 - The strict support runbook path currently supports the existing PG retriever only. General hybrid retrieval and fallback behavior are unchanged.
 - Domain and investigation tests use synthetic data and real PostgreSQL 17.11. The indexed probes additionally use real embeddings and pgvector 0.8.2. HTTP tests provide a trusted test login context. Full application login and workbench acceptance belong to G7.
@@ -44,4 +44,8 @@ The original Qwen configuration remains the chat default; an optional local Llam
 
 ## Runbook and policy increment (2026-11-10)
 
-The original G3 requirements are met on the four recorded local development runs. The accepted version uses model-written facts and a server-selected outcome. The paired indexed probe keeps the same case and retrieved handbook and changes the policy registration. The result changes from `HANDOFF` to `PROPOSE_REPAIR`, with the subscription still pending and the operation table empty. G4 approval and execution, G6 held-out evaluation and G7 full workbench acceptance remain open. [Implementation, failures and replay](RUNBOOKS.md)
+The original G3 requirements are met on the four recorded local development runs. The accepted version uses model-written facts and a server-selected outcome. The paired indexed probe keeps the same case and retrieved handbook and changes the policy registration. The result changes from `HANDOFF` to `PROPOSE_REPAIR`, with the subscription still pending and the operation table empty. [Implementation, failures and replay](RUNBOOKS.md)
+
+## Controlled repair increment (2026-11-17)
+
+An Operator creates a versioned proposal from a completed investigation, a second user with the Approver grant makes the decision, and the Operator executes it. PostgreSQL tests validate version and permission checks, retries, a concurrent repair race and an injected audit failure after the subscription update. The write updates the local synthetic subscription and preserves the original investigation evidence. G5, G6 and G7 remain open. [Walkthrough and verification](REPAIR.md)
