@@ -158,7 +158,7 @@ public class SupportRunService {
         }
     }
 
-    private static List<SupportRunStore.Evidence> subscriptionFactSources(List<SupportRunStore.Evidence> observed) {
+    static List<SupportRunStore.Evidence> subscriptionFactSources(List<SupportRunStore.Evidence> observed) {
         boolean activeSubscription = observed.stream().anyMatch(e -> "SUBSCRIPTION".equals(e.kind())
                 && "ACTIVE".equals(e.snapshot().get("activationState")));
         var businessFacts = observed.stream()
