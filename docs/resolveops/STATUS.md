@@ -5,12 +5,12 @@ This file records checks, not planned capabilities.
 | Gate | Status | Evidence / next requirement |
 |---|---|---|
 | G0 | GREEN | Public fork and pinned base verified. Small commits pushed to `codex/resolveops`; draft [PR #1](https://github.com/aimee-RH/resolveops/pull/1) targets this fork's main. Existing Git credentials work; connector write is not needed. |
-| G1 | GREEN (local) | 56 engineering checks pass. Five opt-in investigation checks are skipped by default. All nine Maven modules compile. The updated frontend passes strict TypeScript and production build. [Remote checks](https://github.com/aimee-RH/resolveops/pull/1/checks) |
+| G1 | GREEN (local) | 56 engineering checks and four Python scorer checks pass. The five local investigation checks and the paired evaluation runner are opt-in. All nine Maven modules compile. The frontend passes strict TypeScript and production build. [Remote checks](https://github.com/aimee-RH/resolveops/pull/1/checks) |
 | G2 | GREEN (read boundary) | Native PostgreSQL tests cover tenant grants, forged/revoked scope, request deduplication, immutable evidence, diagnosis citations and missing identity. HTTP checks supply the trusted upstream login context; full browser-to-SaToken login is not exercised. |
 | G3 | GREEN (local development probes) | Local Llama 3.2 3B calls the scoped tools. Real Nomic embeddings and pgvector retrieve indexed runbooks. The active, unavailable, unregistered and registered cases have recorded outcomes and manually checked fact citations. The backend selects the outcome and any suggestion. [Runbook setup and probes](RUNBOOKS.md) · [Raw records](evidence/investigation-v9.json) |
 | G4 | GREEN (local PostgreSQL and HTTP) | Immutable proposal, separate approver, expiry, scoped rechecks, one verified repair receipt and atomic audit. Eight tests cover HTTP permissions, stale and revoked approvals, concurrency, lost responses and rollback. [Repair setup and checks](REPAIR.md) |
 | G5 | GREEN (local PostgreSQL and model probes) | Read-only API authorization investigation reuses the workbench, runs and evidence. PostgreSQL tests cover tenant and resource scope, safe projection, and incomplete data. Three local model probes cover 401, 403 and an empty window. [API investigation checks](API_INVESTIGATION.md) |
-| G6 | PLANNED | Versioned held-out tasks, an evaluation runner and comparative metrics remain pending. |
+| G6 | GREEN (local diagnosis evaluation) | Frozen synthetic split with 12 held-out cases, two trials per case and two paired arms. Baseline passed 2/24, ResolveOps passed 24/24, and disallowed repair suggestions were 9 vs 0. [Method, raw records and limitations](EVALUATION.md) |
 | G7 | PLANNED | Owner walkthrough, live workbench acceptance, user feedback and actual outcome metrics pending. |
 
 ## Verification commands
@@ -52,4 +52,8 @@ An Operator creates a versioned proposal from a completed investigation, a secon
 
 ## API authorization increment (2026-11-17)
 
-The API investigator reads safe evidence for the current integration. The backend formats cited observations and routes recognized denials to human review or asks for missing evidence. The tests exercise the second scenario against synthetic records through the existing HTTP investigation flow. G6 evaluation and G7 full browser acceptance remain open. [Implementation and verification](API_INVESTIGATION.md)
+The API investigator reads safe evidence for the current integration. The backend formats cited observations and routes recognized denials to human review or asks for missing evidence. The tests exercise the second scenario against synthetic records through the existing HTTP investigation flow. [Implementation and verification](API_INVESTIGATION.md)
+
+## Paired diagnosis evaluation (2026-11-17)
+
+The Python scorer and opt-in Java runner completed 48 diagnosis trials on frozen, synthetic PostgreSQL evidence using local Llama 3.2 3B whenever a model was needed. The checks cover outcomes, action policy, citation provenance and coverage. G7 full browser acceptance remains open. [Evaluation results](EVALUATION.md)

@@ -4,7 +4,7 @@ on:
   push:
     branches: [codex/resolveops]
   pull_request:
-    branches: [main]
+    branches: [main, codex/resolveops]
   workflow_dispatch:
 
 permissions:
@@ -28,6 +28,8 @@ jobs:
           cache: maven
       - name: Support PostgreSQL, HTTP and native tool checks
         run: mvn -B -ntp -pl agent -am '-Dtest=Support*Test,RunbookEvidenceSearchTest,LocalModelConfigurationTest,ReActAgentProviderTest' -Dsurefire.failIfNoSpecifiedTests=false test
+      - name: Evaluation scorer checks
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s eval/resolveops -p 'test_*.py'
       - name: Complete reactor integration
         run: mvn -B -ntp -DskipTests compile
       - name: Preserve verification evidence

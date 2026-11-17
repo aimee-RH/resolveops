@@ -1,0 +1,19 @@
+{
+  "version": "resolveops-diagnosis-v1",
+  "cases": [
+    {"id":"d01","split":"dev","scenario":"SUBSCRIPTION_ACTIVATION","subscription":["PAID","ACTIVE"],"gold":{"outcome":"NO_ACTION_NEEDED","refs":["SUBSCRIPTION"]}},
+    {"id":"d02","split":"dev","scenario":"API_AUTHORIZATION","integration":true,"denials":[],"gold":{"outcome":"NEEDS_INFORMATION","refs":["INTEGRATION","API_DENIALS"]}},
+    {"id":"h01","split":"heldout","scenario":"SUBSCRIPTION_ACTIVATION","subscription":["PAID","PENDING"],"events":["PAYMENT_CONFIRMED","ACTIVATION_FAILED"],"runbook":"registered","gold":{"outcome":"PROPOSE_REPAIR","refs":["SUBSCRIPTION","EVENTS","RUNBOOK"]}},
+    {"id":"h02","split":"heldout","scenario":"SUBSCRIPTION_ACTIVATION","subscription":["PAID","FAILED"],"events":["ACTIVATION_FAILED","PAYMENT_CONFIRMED"],"runbook":"registered","gold":{"outcome":"PROPOSE_REPAIR","refs":["SUBSCRIPTION","EVENTS","RUNBOOK"]}},
+    {"id":"h03","split":"heldout","scenario":"SUBSCRIPTION_ACTIVATION","subscription":["PAID","PENDING"],"events":["PAYMENT_CONFIRMED","ACTIVATION_FAILED"],"runbook":"unregistered","gold":{"outcome":"HANDOFF","refs":["SUBSCRIPTION","EVENTS"]}},
+    {"id":"h04","split":"heldout","scenario":"SUBSCRIPTION_ACTIVATION","subscription":["PAID","FAILED"],"events":["PAYMENT_CONFIRMED","ACTIVATION_FAILED"],"truncated":true,"runbook":"registered","gold":{"outcome":"HANDOFF","refs":["SUBSCRIPTION","EVENTS"]}},
+    {"id":"h05","split":"heldout","scenario":"SUBSCRIPTION_ACTIVATION","subscription":["UNPAID","PENDING"],"events":["PAYMENT_CONFIRMED","ACTIVATION_FAILED"],"runbook":"registered","gold":{"outcome":"HANDOFF","refs":["SUBSCRIPTION","EVENTS"]}},
+    {"id":"h06","split":"heldout","scenario":"SUBSCRIPTION_ACTIVATION","subscription":["PAID","ACTIVE"],"events":["PAYMENT_CONFIRMED","ACTIVATION_FAILED"],"runbook":"registered","gold":{"outcome":"NO_ACTION_NEEDED","refs":["SUBSCRIPTION"]}},
+    {"id":"h07","split":"heldout","scenario":"SUBSCRIPTION_ACTIVATION","events":[],"gold":{"outcome":"NEEDS_INFORMATION","refs":[]}},
+    {"id":"h08","split":"heldout","scenario":"API_AUTHORIZATION","integration":true,"denials":[[401,"TOKEN_EXPIRED"]],"gold":{"outcome":"HANDOFF","refs":["INTEGRATION","API_DENIALS"]}},
+    {"id":"h09","split":"heldout","scenario":"API_AUTHORIZATION","integration":false,"denials":[[403,"MISSING_SCOPE"]],"gold":{"outcome":"HANDOFF","refs":["INTEGRATION","API_DENIALS"]}},
+    {"id":"h10","split":"heldout","scenario":"API_AUTHORIZATION","integration":true,"denials":[[401,"TOKEN_EXPIRED"],[403,"MISSING_SCOPE"]],"gold":{"outcome":"HANDOFF","refs":["INTEGRATION","API_DENIALS"]}},
+    {"id":"h11","split":"heldout","scenario":"API_AUTHORIZATION","integration":true,"denials":[[403,"UNCLASSIFIED"]],"gold":{"outcome":"HANDOFF","refs":["INTEGRATION","API_DENIALS"]}},
+    {"id":"h12","split":"heldout","scenario":"API_AUTHORIZATION","integration":false,"denials":[],"gold":{"outcome":"NEEDS_INFORMATION","refs":["INTEGRATION","API_DENIALS"]}}
+  ]
+}
