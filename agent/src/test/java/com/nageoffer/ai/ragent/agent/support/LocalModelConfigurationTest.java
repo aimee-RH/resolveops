@@ -19,6 +19,7 @@ package com.nageoffer.ai.ragent.agent.support;
 
 import com.nageoffer.ai.ragent.agent.config.AgentProperties;
 import com.nageoffer.ai.ragent.infra.config.AIModelProperties;
+import com.nageoffer.ai.ragent.infra.model.ChatTierConfigValidator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -46,7 +47,7 @@ class LocalModelConfigurationTest {
     }
 
     @Test
-    void profileRoutesAgentAndEveryChatTierOnlyToLocalModel() {
+    void profilePassesStartupValidationWithLocalCandidatesForAllTiers() {
         var binder = configuration();
         var agent = binder.bind("agent", AgentProperties.class).get();
         var ai = binder.bind("ai", AIModelProperties.class).get();
@@ -56,9 +57,12 @@ class LocalModelConfigurationTest {
         assertThat(agent.getChat().getReasoningEffort()).isEqualTo("low");
         assertThat(agent.getMaxConcurrentRunsPerUser()).isEqualTo(1);
         assertThat(ai.getProviders().get("ollama").getUrl()).isEqualTo("http://127.0.0.1:11434");
-        assertThat(ai.getChat().getCandidates()).hasSize(1);
-        assertThat(ai.getChat().getCandidates().get(0).getProvider()).isEqualTo("ollama");
-        ai.getChat().getTiers().values().forEach(tier ->
-                assertThat(tier.getCandidates()).containsExactly("resolveops-local"));
+        assertThat(ai.getChat().getCandidates()).hasSize(2).allMatch(candidate -> candidate.getProvider().equals("ollama"));
+        assertThat(ai.getChat().getTiers().get("fast").getCandidates()).containsExactly("resolveops-local");
+        assertThat(ai.getChat().getTiers().get("standard").getCandidates()).containsExactly("resolveops-local");
+        assertThat(ai.getChat().getTiers().get("deep").getCandidates()).containsExactly("resolveops-local-thinking");
+        assertThat(ai.getChat().getCandidates()).filteredOn(candidate -> candidate.getSupportsThinking())
+                .extracting(AIModelProperties.ModelCandidate::getModel).containsExactly("resolveops-qwen3:4b");
+        new ChatTierConfigValidator(ai).afterPropertiesSet();
     }
 }

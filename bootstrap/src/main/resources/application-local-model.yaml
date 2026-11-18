@@ -34,6 +34,10 @@ ai:
       - id: resolveops-local
         provider: ollama
         model: ${RESOLVEOPS_LOCAL_MODEL:resolveops-qwen3:4b}
+      - id: resolveops-local-thinking
+        provider: ollama
+        model: resolveops-qwen3:4b
+        supports-thinking: true
     tiers:
       fast:
         candidates: [resolveops-local]
@@ -42,5 +46,5 @@ ai:
         candidates: [resolveops-local]
         timeout-ms: 120000
       deep:
-        candidates: [resolveops-local]
+        candidates: [resolveops-local-thinking]
         timeout-ms: 120000
