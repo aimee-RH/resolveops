@@ -14,7 +14,7 @@ The initial scenarios are subscription activation investigation with approval-co
 - No keys, customer data, database dumps, build caches or generated traces in commits.
 - A green gate requires evidence. A unit test or scripted model never counts as real-model validation.
 
-See [green lights](GREEN_LIGHTS.md), [contribution boundaries](CONTRIBUTIONS.md), and [current status](STATUS.md).
+See [the browser demo](DEMO.md), [green lights](GREEN_LIGHTS.md), [contribution boundaries](CONTRIBUTIONS.md), and [current status](STATUS.md).
 
 ## First deliverable
 

@@ -1,5 +1,7 @@
 # M1 owner walkthrough
 
+For the end-to-end G7 demo, follow [the browser walkthrough and acceptance record](DEMO.md).
+
 Follow the small commits in [PR #1](https://github.com/aimee-RH/resolveops/pull/1/commits). Reproduce a test before treating an AI-assisted implementation as a personally understood resume claim.
 
 1. Explain why customer tenants and support users are different entities. Find the grant lookup in `support/.../access/SupportAccessService.java`.
