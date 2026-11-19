@@ -97,7 +97,7 @@ export function SupportRepairPanel({ runId }: { runId: string }) {
       </>}
       {repair?.canExecute && proposal && <AlertDialog>
         <AlertDialogTrigger asChild><Button size="sm" disabled={busy}>Execute repair</Button></AlertDialogTrigger>
-        <AlertDialogContent>
+        <AlertDialogContent className="support-repair-dialog">
           <AlertDialogTitle>Activate the approved subscription</AlertDialogTitle>
           <AlertDialogDescription>
             Activate subscription {proposal.targetId} at expected version {proposal.expectedVersion} and generate a verified receipt.
