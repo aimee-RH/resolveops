@@ -32,6 +32,7 @@ export DEMO_EMBEDDING
 createdb "${pg_options[@]}" "$database"
 {
   sed 's/vector(1536)/vector(768)/' "$repo_root/resources/database/schema_pg.sql"
+  sed -n '/^INSERT INTO t_agent_profile/,$p' "$repo_root/resources/database/init_data_pg.sql"
   cat "$repo_root/resources/database/resolveops_demo_pg.sql"
 } | psql "${pg_options[@]}" -d "$database" -X -1 -q -v ON_ERROR_STOP=1 -f -
 
