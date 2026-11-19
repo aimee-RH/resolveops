@@ -2,6 +2,10 @@
 
 A SaaS support workbench extending [Ragent](https://github.com/nageoffer/ragent), built as an explainable SWE / AI engineering project. Read-only investigations and approval-controlled local subscription repair are opt-in.
 
+## Project showcase
+
+The [GitHub Pages showcase](https://aimee-rh.github.io/resolveops/) presents an interactive walkthrough using synthetic examples. It is a static demonstration; it does not call the support API or perform repairs. The real protected workbench remains at `/support` when the backend is running. The self-contained page lives in [`showcase/`](showcase/) and is published by [the Pages workflow](.github/workflows/pages.yml) from `main`. Configure the repository's Pages source as **GitHub Actions** before the first deployment.
+
 ## Current implementation
 
 - PostgreSQL-backed customer grants, case access and run-scoped reads.
