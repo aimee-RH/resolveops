@@ -38,11 +38,13 @@ java -jar bootstrap/target/bootstrap-0.0.1-SNAPSHOT.jar \
 
 ## 从浏览器走一遍
 
-1. 用 `demo-operator` 登录，从聊天侧栏打开支持工作台，选择 `demo-activation`。点击「开始只读调查」。展开「引用的手册」，并在运行证据里查看订阅状态和付款、失败事件。
-2. 提交修复提案。操作员只能看到「待审批」。点「返回聊天」，从用户菜单退出，使用 `demo-approver` 登录并批准同一提案。
-3. 切回 `demo-operator`，执行并确认。查看「已修复并核验」、开通版本和操作回执。订阅完成修复，工单保留 `OPEN`。
+1. 用 `demo-operator` 登录，从聊天侧栏的「Support workbench」进入，选择 `demo-activation`。点击「Start investigation」。展开诊断下方的手册引用，并在「Run evidence」里查看订阅状态和付款、失败事件。
+2. 点击「Submit repair proposal」。操作员只能看到「Awaiting approval」。点「Back to chat」，从用户菜单退出，使用 `demo-approver` 登录并点击「Approve proposal」。
+3. 切回 `demo-operator`，点击「Execute repair」并确认。查看「Repaired and verified」、开通版本和操作回执。订阅完成修复，工单保留 `OPEN`。
 4. 打开 `demo-api-403`，开始调查。查看 `HTTP 403 (MISSING_SCOPE)`、转人工结论和 API 日志证据。
 5. 用操作员直接打开 [第二个客户的工单](http://127.0.0.1:5173/support/demo-private)。页面应显示 404，列表仍只显示已授权客户的两张工单。
+
+修复后再次调查，最新记录应显示「No action needed」。原始工单描述保留客户最初的故障报告，历史记录保留当次观察到的证据。用「Select investigation」查看较早的修复建议与回执。工作台支持纵向滚动，窄窗口里的证据位于调查记录下方。
 
 ## 2026-11-18 浏览器验收记录
 

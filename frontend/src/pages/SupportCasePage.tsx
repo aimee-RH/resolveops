@@ -6,9 +6,9 @@ import { SupportRepairPanel } from "@/components/SupportRepairPanel";
 import { supportService } from "@/services/supportService";
 import type { SupportCase, SupportEvidence, SupportRun, SupportRunEvent } from "@/types/support";
 
-const scenarioName = { SUBSCRIPTION_ACTIVATION: "订阅开通故障", API_AUTHORIZATION: "API 授权故障" };
-const message = (error: unknown) => error instanceof Error ? error.message : "读取失败，请稍后重试";
-const outcomeName = { PROPOSE_REPAIR: "建议修复", NO_ACTION_NEEDED: "无需修复", NEEDS_INFORMATION: "需要补充信息", HANDOFF: "转交人工处理" };
+const scenarioName = { SUBSCRIPTION_ACTIVATION: "Subscription activation", API_AUTHORIZATION: "API authorization" };
+const message = (error: unknown) => error instanceof Error ? error.message : "Unable to load. Please try again.";
+const outcomeName = { PROPOSE_REPAIR: "Repair recommended", NO_ACTION_NEEDED: "No action needed", NEEDS_INFORMATION: "More information needed", HANDOFF: "Human review needed" };
 const ongoing = (run: SupportRun) => run.status === "PENDING" || run.status === "RUNNING";
 
 export function SupportCasePage() {
@@ -115,44 +115,44 @@ export function SupportCasePage() {
   return (
     <main lang="en" aria-label="Support workbench" tabIndex={0} className="h-dvh overflow-y-auto bg-background text-foreground">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b px-6 py-5">
-        <div><h1 className="text-xl font-semibold">ResolveOps 支持工作台</h1><p className="text-sm text-muted-foreground">工单、调查记录与可追溯证据</p></div>
-        <div className="flex items-center gap-4"><Button variant="outline" onClick={() => setRefresh((value) => value + 1)}>刷新</Button><Link className="text-sm underline" to="/chat">返回聊天</Link></div>
+        <div><h1 className="text-xl font-semibold">ResolveOps Support Workbench</h1><p className="text-sm text-muted-foreground">Investigate customer incidents and review the supporting evidence.</p></div>
+        <div className="flex items-center gap-4"><Button variant="outline" onClick={() => setRefresh((value) => value + 1)}>Refresh</Button><Link className="text-sm underline" to="/chat">Back to chat</Link></div>
       </header>
       <p className="border-b bg-muted/40 px-6 py-3 text-sm">
-        {enabled ? "只读调查根据业务记录与手册生成带来源的诊断。" : "可以查看已有工单、调查记录与证据。"}
-        {repairEnabled && " 修复须由另一名有权限的人员审批，再由发起人执行。"}
+        {enabled ? "Investigations read business records and runbooks to produce diagnoses linked to evidence." : "View existing cases, investigation history and evidence."}
+        {repairEnabled && " A separate authorized reviewer must approve a repair before the requester can execute it."}
       </p>
       {error && <p role="alert" className="m-6 rounded border border-destructive p-4 text-destructive">{error}</p>}
-      <div className="grid gap-6 p-6 lg:grid-cols-[260px_1fr_340px]">
-        <nav aria-label="工单列表" className="space-y-3">
-          <h2 className="font-semibold">可访问工单</h2>
-          {!loading && !cases.length && <p className="text-sm text-muted-foreground">没有可访问的工单。请确认业务数据和客户访问授权已配置。</p>}
+      <div className="grid gap-6 p-6 lg:grid-cols-[260px_minmax(0,1fr)_340px]">
+        <nav aria-label="Case list" className="space-y-3">
+          <h2 className="font-semibold">Your cases</h2>
+          {!loading && !cases.length && <p className="text-sm text-muted-foreground">No accessible cases. Check that case records and customer access grants are configured.</p>}
           {cases.map((record) => <Link key={record.id} to={`/support/${encodeURIComponent(record.id)}`} aria-current={record.id === caseId ? "page" : undefined}
             className={`block rounded-lg border p-3 text-sm ${record.id === caseId ? "border-primary bg-muted" : "hover:bg-muted/50"}`}>
             <span className="block font-medium">{scenarioName[record.scenario]}</span><span className="block break-all text-muted-foreground">{record.id}</span>
           </Link>)}
         </nav>
-        <section aria-label="工单详情" className="min-w-0 space-y-5">
-          {loading && <p role="status">正在读取工单…</p>}
+        <section aria-label="Case details" className="min-w-0 space-y-5">
+          {loading && <p role="status">Loading case…</p>}
           {detail && <>
             <div className="rounded-lg border p-5"><h2 className="text-lg font-semibold">{scenarioName[detail.scenario]}</h2>
               <p className="mt-3 whitespace-pre-wrap">{detail.description}</p>
-              <dl className="mt-4 grid grid-cols-2 gap-2 text-sm"><dt>客户</dt><dd className="break-all">{detail.tenantId}</dd><dt>业务资源</dt><dd className="break-all">{detail.resourceId}</dd><dt>工单状态</dt><dd>{detail.status}</dd></dl>
+              <dl className="mt-4 grid grid-cols-2 gap-2 text-sm"><dt>Customer tenant</dt><dd className="break-all">{detail.tenantId}</dd><dt>Resource</dt><dd className="break-all">{detail.resourceId}</dd><dt>Case status</dt><dd>{detail.status}</dd></dl>
               <Button className="mt-4" disabled={!enabled || submitting || runs.some(ongoing)} onClick={investigate}>
-                {submitting ? "正在提交…" : "开始只读调查"}
+                {submitting ? "Submitting…" : "Start investigation"}
               </Button>
             </div>
-            <div className="space-y-3"><h2 className="font-semibold">调查记录</h2>
-              {!runs.length && <p className="text-sm text-muted-foreground">尚无调查记录。发起调查后可以在这里查看进度和结果。</p>}
-              {runs.length > 0 && <select aria-label="选择调查记录" value={runId ?? ""} onChange={(event) => setRunId(event.target.value)} className="w-full rounded border bg-background p-2 text-sm">
+            <div className="space-y-3"><h2 className="font-semibold">Investigation history</h2>
+              {!runs.length && <p className="text-sm text-muted-foreground">No investigations yet. Start one to see its progress and results here.</p>}
+              {runs.length > 0 && <select aria-label="Select investigation" value={runId ?? ""} onChange={(event) => setRunId(event.target.value)} className="w-full rounded border bg-background p-2 text-sm">
                 {runs.map((run) => <option key={run.id} value={run.id}>{run.status} · {run.startedAt}</option>)}
               </select>}
-              {selectedRun && <div className="rounded-lg border p-4"><p className="text-sm">运行状态：{selectedRun.status}</p>
-                {ongoing(selectedRun) && <Button variant="outline" className="mt-3" disabled={submitting} onClick={cancel}>停止调查</Button>}
+              {selectedRun && <div className="rounded-lg border p-4"><p className="text-sm">Run status · {selectedRun.status}</p>
+                {ongoing(selectedRun) && <Button variant="outline" className="mt-3" disabled={submitting} onClick={cancel}>Stop investigation</Button>}
                 {selectedRun.diagnosis?.outcome && <h3 className="mt-3 font-medium">{outcomeName[selectedRun.diagnosis.outcome]}</h3>}
                 {selectedRun.diagnosis?.recommendedAction?.type === "RECONCILE_ACTIVATION" &&
-                  <p className="mt-2 text-sm">建议核对付款与开通状态，并修复两者不一致的问题。</p>}
-                {!!selectedRun.diagnosis?.runbookEvidenceIds?.length && <ul aria-label="引用的手册" className="mt-2 space-y-1 text-sm">
+                  <p className="mt-2 text-sm">Reconcile the recorded payment with the subscription activation state.</p>}
+                {!!selectedRun.diagnosis?.runbookEvidenceIds?.length && <ul aria-label="Cited runbooks" className="mt-2 space-y-1 text-sm">
                   {selectedRun.diagnosis.runbookEvidenceIds.map((id) => {
                     const title = evidence.find((item) => item.id === id)?.snapshot.title;
                     return <li key={id}><a className="break-all underline" href={`#evidence-${id}`} onClick={() => {
@@ -161,11 +161,11 @@ export function SupportCasePage() {
                     }}>{typeof title === "string" ? title : id}</a></li>;
                   })}
                 </ul>}
-                {selectedRun.diagnosis?.error && <p role="alert" className="mt-3 text-sm">调查未完成：{selectedRun.diagnosis.error}。可查看已有证据，再重新调查。</p>}
+                {selectedRun.diagnosis?.error && <p role="alert" className="mt-3 text-sm">Investigation incomplete ({selectedRun.diagnosis.error}). Review the collected evidence before starting again.</p>}
                 {selectedRun.diagnosis?.facts?.map((fact, index) => <div key={index} className="mt-3 text-sm"><p>{fact.text}</p>
-                  <p className="break-all text-xs text-muted-foreground">证据：{fact.evidenceIds.join("、")}</p></div>)}
-                {selectedRun.diagnosis?.hypotheses?.map((item, index) => <p key={index} className="mt-2 text-sm">待验证：{item}</p>)}
-                {selectedRun.diagnosis?.missingInformation?.map((item, index) => <p key={index} className="mt-2 text-sm">待补充：{item}</p>)}
+                  <p className="break-all text-xs text-muted-foreground">Evidence · {fact.evidenceIds.join(", ")}</p></div>)}
+                {selectedRun.diagnosis?.hypotheses?.map((item, index) => <p key={index} className="mt-2 text-sm">To verify · {item}</p>)}
+                {selectedRun.diagnosis?.missingInformation?.map((item, index) => <p key={index} className="mt-2 text-sm">Missing information · {item}</p>)}
                 {repairEnabled && detail.scenario === "SUBSCRIPTION_ACTIVATION" && selectedRun.status === "COMPLETED" && selectedRun.diagnosis?.outcome === "PROPOSE_REPAIR" &&
                   <SupportRepairPanel key={selectedRun.id} runId={selectedRun.id} />}
               </div>}
@@ -173,10 +173,10 @@ export function SupportCasePage() {
             </div>
           </>}
         </section>
-        <aside aria-label="运行证据" className="min-w-0 space-y-3"><h2 className="font-semibold">运行证据</h2>
-          {!evidence.length && <p className="text-sm text-muted-foreground">选择真实调查记录后查看。未产生证据时保持为空。</p>}
+        <aside aria-label="Run evidence" className="min-w-0 space-y-3"><h2 className="font-semibold">Run evidence</h2>
+          {!evidence.length && <p className="text-sm text-muted-foreground">Select an investigation to view the evidence it collected.</p>}
           {evidence.map((item) => <details key={item.id} id={`evidence-${item.id}`} className="rounded-lg border p-3 text-sm"><summary className="cursor-pointer break-all">{item.kind} · {item.sourceRef}</summary>
-            <p className="mt-2 break-all text-xs text-muted-foreground">观测时间：{item.observedAt}<br />内容标识：{item.hash}</p>
+            <p className="mt-2 break-all text-xs text-muted-foreground">Observed at · {item.observedAt}<br />Content hash · {item.hash}</p>
             <pre className="mt-3 whitespace-pre-wrap break-words text-xs">{JSON.stringify(item.snapshot, null, 2)}</pre>
           </details>)}
         </aside>
