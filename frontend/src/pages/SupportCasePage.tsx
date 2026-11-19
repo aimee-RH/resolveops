@@ -113,7 +113,7 @@ export function SupportCasePage() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main lang="en" aria-label="Support workbench" tabIndex={0} className="h-dvh overflow-y-auto bg-background text-foreground">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b px-6 py-5">
         <div><h1 className="text-xl font-semibold">ResolveOps 支持工作台</h1><p className="text-sm text-muted-foreground">工单、调查记录与可追溯证据</p></div>
         <div className="flex items-center gap-4"><Button variant="outline" onClick={() => setRefresh((value) => value + 1)}>刷新</Button><Link className="text-sm underline" to="/chat">返回聊天</Link></div>
