@@ -1,19 +1,19 @@
 const cases = {
   subscription: {
-    id: 'CASE-2048', type: 'SUBSCRIPTION ACTIVATION', title: '订阅开通异常', description: '客户付款成功后，订阅仍处于待开通状态。', customer: 'Acme Cloud', resource: 'SUB-8042', scenario: '订阅状态',
-    stepOne: '读取订阅快照与付款事件', stepTwo: '匹配已登记的开通手册', outcome: '建议修复', diagnosis: '支付已完成，订阅尚未开通', body: '已记录付款成功事件，订阅快照仍为待开通。已登记的操作手册与当前情况匹配，因此可提出受控修复建议。', footnote: '下一步需要不同角色审批', repair: true,
+    id: 'CASE-2048', type: 'SUBSCRIPTION ACTIVATION', title: 'Subscription activation', description: 'Payment succeeded, but the subscription remains pending.', customer: 'Acme Cloud', resource: 'SUB-8042', scenario: 'Subscription status',
+    stepOne: 'Read subscription snapshot and payment events', stepTwo: 'Match a registered activation runbook', outcome: 'Repair proposed', diagnosis: 'Payment complete; activation pending', body: 'A payment success event is recorded, while the subscription snapshot remains pending. A registered runbook matches the case, so a controlled repair can be proposed.', footnote: 'A separate approver is required', repair: true,
     evidence: [
-      { kind: '业务快照', id: 'EV-101', title: '订阅状态', body: 'SUB-8042 · 状态：待开通', source: '订阅记录 / 只读快照' },
-      { kind: '事件记录', id: 'EV-102', title: '付款成功事件', body: '同一订阅已收到付款成功事件', source: '业务事件 / 只读快照' },
-      { kind: '操作手册', id: 'EV-103', title: '开通状态核对流程', body: '已登记版本与当前问题匹配', source: '手册集合 / 来源哈希' }
+      { kind: 'Business snapshot', id: 'EV-101', title: 'Subscription status', body: 'SUB-8042 · Status: pending', source: 'Subscription record / read-only snapshot' },
+      { kind: 'Event record', id: 'EV-102', title: 'Payment succeeded', body: 'A payment success event exists for this subscription', source: 'Business event / read-only snapshot' },
+      { kind: 'Runbook', id: 'EV-103', title: 'Activation reconciliation procedure', body: 'Registered version matches this case', source: 'Runbook collection / source hash' }
     ]
   },
   api: {
-    id: 'CASE-2106', type: 'API AUTHORIZATION', title: 'API 授权故障', description: '客户报告集成接口近期返回 403，调用无法完成。', customer: 'Northstar', resource: 'INT-1907', scenario: 'API 授权',
-    stepOne: '读取集成状态与 401/403 事件', stepTwo: '关联请求时间窗口中的记录', outcome: '转交人工处理', diagnosis: '授权拒绝需要人工核查', body: '事件窗口中存在 403 拒绝记录。调查可以说明观察到的现象，但现有证据不足以自动更改集成权限，因此转交有权限的人员核查。', footnote: '此场景只提供只读诊断', repair: false,
+    id: 'CASE-2106', type: 'API AUTHORIZATION', title: 'API authorization issue', description: 'The customer reports recent 403 responses from an integration API.', customer: 'Northstar', resource: 'INT-1907', scenario: 'API authorization',
+    stepOne: 'Read integration status and 401/403 events', stepTwo: 'Connect records in the request window', outcome: 'Human handoff', diagnosis: 'Authorization denial needs review', body: 'The event window contains a 403 denial. The investigation describes the observation, but the evidence does not justify changing integration permissions. Hand off to an authorized person.', footnote: 'Read-only diagnosis for this scenario', repair: false,
     evidence: [
-      { kind: '集成状态', id: 'EV-201', title: '集成配置快照', body: 'INT-1907 · 已连接', source: '集成记录 / 安全字段' },
-      { kind: '请求事件', id: 'EV-202', title: '授权拒绝', body: '观察窗口内记录 HTTP 403', source: '授权事件 / 有界窗口' }
+      { kind: 'Integration status', id: 'EV-201', title: 'Integration configuration snapshot', body: 'INT-1907 · Connected', source: 'Integration record / safe fields' },
+      { kind: 'Request event', id: 'EV-202', title: 'Authorization denied', body: 'HTTP 403 recorded in the observation window', source: 'Authorization events / bounded window' }
     ]
   }
 };
@@ -57,19 +57,19 @@ function selectCase(key) {
   setText('case-customer', item.customer);
   setText('case-resource', item.resource);
   setText('case-scenario', item.scenario);
-  setText('case-status', '待处理');
-  setText('run-state', '· 等待开始');
+  setText('case-status', 'Open');
+  setText('run-state', '· Not started');
   setText('evidence-count', '00');
   byId('investigation').hidden = true;
   byId('empty-state').hidden = false;
-  byId('run-button').textContent = '开始只读调查 →';
-  byId('evidence-list').innerHTML = '<div class="evidence-placeholder"><span>◌</span><p>启动调查后，引用的记录会显示在这里。</p></div>';
+  byId('run-button').textContent = 'Start read-only investigation →';
+  byId('evidence-list').innerHTML = '<div class="evidence-placeholder"><span>◌</span><p>Cited records appear here after the investigation starts.</p></div>';
 }
 
 function runInvestigation() {
   const item = cases[active];
-  setText('run-state', '· 已完成');
-  setText('case-status', '已调查');
+  setText('run-state', '· Completed');
+  setText('case-status', 'Investigated');
   setText('step-one', item.stepOne);
   setText('step-two', item.stepTwo);
   setText('outcome-tag', item.outcome);
@@ -80,7 +80,7 @@ function runInvestigation() {
   byId('approval').hidden = !item.repair;
   byId('empty-state').hidden = true;
   byId('investigation').hidden = false;
-  byId('run-button').textContent = '重新演示 ↻';
+  byId('run-button').textContent = 'Run again ↻';
   renderEvidence(item.evidence);
 }
 
