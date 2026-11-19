@@ -36,6 +36,10 @@ java -jar bootstrap/target/bootstrap-0.0.1-SNAPSHOT.jar \
 
 在另一个终端运行 `cd frontend && npm ci && VITE_API_BASE_URL=/api/ragent npm run dev -- --strictPort`。打开 [本地工作台](http://127.0.0.1:5173/support)，使用 `.resolveops/demo-credentials.txt` 里的合成账号。脚本生成 768 维 Nomic 向量并把文档、分块和策略哈希写入数据库，使新演示可以重复检索同一份手册。停机时在各演示进程自己的终端退出。
 
+初始化还加载上游默认助手提示词，并激活一个适合本地小模型的简短演示人设。聊天可从「Back to chat」进入，窄窗口里的聊天侧栏也显示「Support workbench」。聊天走通用知识问答，工单范围内的调查和审批通过工作台操作。演示库只加载了订阅手册，HR 和薪资政策需要另外提供。
+
+`local-model` 的通用检索关闭云端精排，使用向量召回结果。本机模型仍可能多余检索、引用不相关片段，需要人工核对回答。工单诊断的精确手册登记和业务判定见[调查说明](INVESTIGATION.md)。
+
 ## 从浏览器走一遍
 
 1. 用 `demo-operator` 登录，从聊天侧栏的「Support workbench」进入，选择 `demo-activation`。点击「Start investigation」。展开诊断下方的手册引用，并在「Run evidence」里查看订阅状态和付款、失败事件。
@@ -47,6 +51,8 @@ java -jar bootstrap/target/bootstrap-0.0.1-SNAPSHOT.jar \
 修复后再次调查，最新记录应显示「No action needed」。原始工单描述保留客户最初的故障报告，历史记录保留当次观察到的证据。用「Select investigation」查看较早的修复建议与回执。工作台支持纵向滚动，窄窗口里的证据位于调查记录下方。
 
 ## 2026-11-18 浏览器验收记录
+
+后续界面检查覆盖 1440px 桌面双栏和 375px 窄窗口，正文可滚动到底部，来源链接能展开并定位证据，运行轨迹默认折叠。通过新版页面新建了一次 API 调查，结果为 `COMPLETED / HANDOFF`，并再次打开历史订阅修复的核验回执。聊天通过真实登录生成了本地模型回复。针对问候也发生了多余检索，因此通用聊天回复质量仍需改进。
 
 | 检查 | 实际结果 |
 |---|---|
