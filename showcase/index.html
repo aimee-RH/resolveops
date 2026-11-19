@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#101820" />
+  <meta name="description" content="ResolveOps：面向 SaaS 支持团队的可追溯 AI 调查与受控修复工作台。体验基于合成数据的交互演示。" />
+  <title>ResolveOps · 让每一次支持判断都有依据</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./style.css" />
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="ResolveOps 首页"><span class="brand-mark">R<span>✳</span></span><span>resolve<span class="brand-light">ops</span></span></a>
+    <nav class="nav" aria-label="主导航"><a href="#workbench">交互演示</a><a href="#how">工作方式</a><a href="#results">验证结果</a></nav>
+    <a class="header-link" href="https://github.com/aimee-RH/resolveops" target="_blank" rel="noopener noreferrer">查看 GitHub <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main id="top">
+    <section class="hero container">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="pulse"></span> AI SUPPORT OPERATIONS <span class="eyebrow-divider">/</span> PROJECT SHOWCASE</div>
+        <h1>支持问题很复杂。<br /><em>判断应该有依据。</em></h1>
+        <p class="hero-sub">ResolveOps 把工单、业务记录与操作手册放在同一条调查链里：先读取可信证据，再给出可追溯的诊断。需要修复时，由人审批并执行。</p>
+        <div class="hero-actions"><a class="button primary" href="#workbench">体验交互演示 <span aria-hidden="true">↗</span></a><a class="button secondary" href="https://github.com/aimee-RH/resolveops/blob/main/README.md" target="_blank" rel="noopener noreferrer">阅读项目文档 <span aria-hidden="true">↗</span></a></div>
+        <p class="hero-note"><span class="asterisk">✳</span> 页面使用合成示例，所有操作仅在浏览器中演示。</p>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit orbit-three"></div>
+        <div class="hero-card card-a"><span class="tiny-label">01 / SIGNAL</span><span class="card-icon signal">⌁</span><strong>异常事件</strong><small>订阅状态与支付记录不一致</small></div>
+        <div class="hero-card card-b"><span class="tiny-label">02 / EVIDENCE</span><span class="card-icon evidence">✳</span><strong>证据关联</strong><small>记录 · 手册 · 可验证引用</small></div>
+        <div class="hero-card card-c"><span class="tiny-label">03 / DECISION</span><span class="card-icon decision">✓</span><strong>受控处理</strong><small>审批后执行 · 留存回执</small></div>
+        <div class="center-symbol">R<span>✳</span></div>
+        <span class="visual-coordinate coordinate-a">SCOPE / 001</span><span class="visual-coordinate coordinate-b">TRACE / ACTIVE</span>
+      </div>
+    </section>
+
+    <section class="metrics-band" aria-label="产品原则"><div class="container metrics-grid"><div><span class="metric-icon">◎</span><strong>范围受控</strong><small>只读取当前授权客户与资源</small></div><div><span class="metric-icon">◈</span><strong>证据可追溯</strong><small>每条事实关联持久化快照</small></div><div><span class="metric-icon">◇</span><strong>动作有人把关</strong><small>提议、审批与执行分开</small></div></div></section>
+
+    <section class="demo-section container" id="workbench">
+      <div class="section-heading"><div><span class="section-kicker">01 / INTERACTIVE WALKTHROUGH</span><h2>进入支持工作台</h2><p>选择一个合成工单，沿着调查结果查看证据与下一步处理。</p></div><span class="demo-badge"><span class="pulse"></span> INTERACTIVE DEMO · SYNTHETIC DATA</span></div>
+      <div class="workbench">
+        <aside class="case-sidebar"><div class="sidebar-top"><span class="sidebar-heading">工作空间</span><span class="sidebar-avatar">RO</span></div><div class="sidebar-section-label">工单列表 <span>02</span></div><button class="case-item active" data-case="subscription" type="button"><span class="case-item-icon">↗</span><span class="case-item-body"><strong>订阅开通异常</strong><small>CASE-2048 · Acme Cloud</small></span><span class="case-indicator"></span></button><button class="case-item" data-case="api" type="button"><span class="case-item-icon violet">{ }</span><span class="case-item-body"><strong>API 授权故障</strong><small>CASE-2106 · Northstar</small></span><span class="case-indicator"></span></button><div class="sidebar-footer"><span class="status-dot"></span> 演示环境 <span>·</span> 无后端连接</div></aside>
+        <div class="case-main"><div class="case-toolbar"><div class="breadcrumbs">支持工作台 <span>/</span> <span id="crumb-case">CASE-2048</span></div><span class="toolbar-tag">只读调查</span></div><div class="case-content"><div class="case-title-row"><div><span class="overline" id="case-id">CASE-2048 / SUBSCRIPTION ACTIVATION</span><h3 id="case-title">订阅开通异常</h3><p id="case-description">客户付款成功后，订阅仍处于待开通状态。</p></div><span class="case-status" id="case-status">待处理</span></div><div class="facts-strip"><div><small>客户</small><strong id="case-customer">Acme Cloud</strong></div><div><small>业务资源</small><strong id="case-resource">SUB-8042</strong></div><div><small>场景</small><strong id="case-scenario">订阅状态</strong></div></div><div class="run-header"><div><span class="section-kicker">INVESTIGATION / 001</span><h4>调查记录 <span id="run-state">· 等待开始</span></h4></div><button class="button investigate" id="run-button" type="button">开始只读调查 <span aria-hidden="true">→</span></button></div><div class="empty-state" id="empty-state"><div class="empty-glyph">⌁</div><strong>从证据开始</strong><p>启动模拟调查，查看业务记录、来源引用与后续判断。</p></div><div id="investigation" hidden><div class="timeline" aria-label="调查步骤"><div class="timeline-step"><span>1</span><div><strong>读取范围内的业务记录</strong><small id="step-one">检查当前资源的状态与事件</small></div><b>完成</b></div><div class="timeline-step"><span>2</span><div><strong>关联证据与操作手册</strong><small id="step-two">仅使用可访问的记录和来源</small></div><b>完成</b></div><div class="timeline-step last"><span>3</span><div><strong>形成带引用的判断</strong><small>系统规则决定下一步处理方式</small></div><b>完成</b></div></div><div class="diagnosis"><div class="diagnosis-top"><span>✳ 调查结论</span><span class="diagnosis-tag" id="outcome-tag">建议修复</span></div><h4 id="diagnosis-title">支付已完成，订阅尚未开通</h4><p id="diagnosis-body">已记录付款成功事件，订阅快照仍为待开通。已登记的操作手册与当前情况匹配，因此可提出受控修复建议。</p><div class="diagnosis-actions"><button class="text-action" id="evidence-button" type="button">查看引用证据 <span aria-hidden="true">↗</span></button><span id="diagnosis-footnote">下一步需要不同角色审批</span></div></div><div class="approval" id="approval"><div class="approval-heading"><span>CONTROLLED REPAIR</span><strong>修复必须经过人的决定</strong></div><div class="approval-stages"><span class="done">01 提出方案</span><i></i><span>02 独立审批</span><i></i><span>03 人工执行</span></div><p>演示只展示流程。真实系统会重新检查权限与版本，并保存可验证的执行回执。</p></div></div></div></div>
+        <aside class="evidence-panel" id="evidence-panel"><div class="panel-heading"><div><span class="section-kicker">EVIDENCE VAULT</span><h4>证据快照</h4></div><span class="panel-count" id="evidence-count">00</span></div><div id="evidence-list" class="evidence-list"><div class="evidence-placeholder"><span>◌</span><p>启动调查后，引用的记录会显示在这里。</p></div></div><div class="panel-bottom"><span>◇</span> 每条结论都应能回到它的来源</div></aside>
+      </div><p class="demo-caption">以上为静态交互演示，内容基于合成示例；真实调查、权限校验和修复操作需要运行项目后端。</p>
+    </section>
+
+    <section class="how-section" id="how"><div class="container"><div class="section-heading"><div><span class="section-kicker">02 / HOW IT WORKS</span><h2>从问题到行动，每一步都有边界。</h2></div></div><div class="feature-grid"><article><div class="feature-number">01 <span>↗</span></div><div class="feature-art art-one"><span class="art-box">客户范围</span><span class="art-line"></span><span class="art-box accent">授权资源</span><span class="art-lock">⌑</span></div><h3>先确定谁能看什么</h3><p>客户授权与工单访问在后端检查。调查工具只读取当前运行范围内的资源，并限制参数与调用预算。</p></article><article><div class="feature-number">02 <span>↗</span></div><div class="feature-art art-two"><span class="art-document">≡<br />≡<br />≡</span><span class="art-spark">✳</span><span class="art-document second">≡<br />≡<br />≡</span></div><h3>把判断接回证据</h3><p>业务记录和手册保存为不可变证据快照。模型写出的事实须引用快照，后端规则决定最终处理路径。</p></article><article><div class="feature-number">03 <span>↗</span></div><div class="feature-art art-three"><span>提议</span><b>→</b><span>审批</span><b>→</b><span>执行</span></div><h3>修复留给有权限的人</h3><p>提议绑定版本和有效期；另一名人员审批，发起人再执行。执行前重新校验，并保留审计回执。</p></article></div></div></section>
+
+    <section class="results-section container" id="results"><div class="results-copy"><span class="section-kicker">03 / ENGINEERING EVIDENCE</span><h2>让系统可验证，<br /><em>也让限制可见。</em></h2><p>项目在合成数据上进行了 PostgreSQL 检查、局部模型调查与配对诊断评估。这里展示的是开发验证结果，并非生产环境表现。</p><a class="inline-link" href="https://github.com/aimee-RH/resolveops/blob/main/docs/resolveops/EVALUATION.md" target="_blank" rel="noopener noreferrer">阅读评估方法与限制 <span aria-hidden="true">↗</span></a></div><div class="results-card"><span class="results-label">PAIRED DIAGNOSIS EVALUATION / SYNTHETIC</span><div class="result-row"><strong>24<span>/24</span></strong><p>ResolveOps 在冻结合成样本的<br />24 次诊断试验中通过检查</p></div><div class="result-divider"></div><div class="result-pair"><div><strong>0</strong><small>不被允许的修复建议</small></div><div><strong>12</strong><small>留出的合成案例</small></div></div><p class="results-disclaimer">结果来自本地模型与合成 PostgreSQL 证据；真实浏览器验收和实际业务指标仍待完成。</p></div></section>
+
+    <section class="cta-section"><div class="container cta-inner"><div><span class="section-kicker">EXPLORE THE SOURCE</span><h2>继续了解 ResolveOps</h2><p>查看实现、运行说明和可复现的检查记录。</p></div><a class="button cta-button" href="https://github.com/aimee-RH/resolveops" target="_blank" rel="noopener noreferrer">打开 GitHub 仓库 <span aria-hidden="true">↗</span></a></div></section>
+  </main>
+  <footer class="footer container"><a class="brand" href="#top"><span class="brand-mark">R<span>✳</span></span><span>resolve<span class="brand-light">ops</span></span></a><span>可追溯的调查。审慎的行动。</span><span>基于 Ragent · Apache-2.0</span></footer>
+</body>
+</html>
