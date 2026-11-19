@@ -196,9 +196,9 @@ export function AgentSidebar() {
             <span className="agent-new-sub">从空白开始</span>
           </span>
         </button>
-        <button type="button" className="agent-admin-btn" onClick={() => navigate("/support")}>
+        <button type="button" className="agent-admin-btn agent-support-btn" onClick={() => navigate("/support")}>
           <BookOpen className="h-3.5 w-3.5" strokeWidth={2} />
-          支持工作台
+          Support workbench
         </button>
         {user?.role === "admin" ? (
           <button

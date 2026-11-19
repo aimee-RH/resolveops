@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Github } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import { AgentRawLog } from "@/components/agent/AgentRawLog";
 import { AgentSidebar } from "@/components/agent/AgentSidebar";
@@ -39,9 +40,10 @@ interface AgentHeaderProps {
   meta: AgentMetaState;
   rawOpen: boolean;
   onToggleRaw: () => void;
+  supportWorkbench: boolean;
 }
 
-function AgentHeader({ meta, rawOpen, onToggleRaw }: AgentHeaderProps) {
+function AgentHeader({ meta, rawOpen, onToggleRaw, supportWorkbench }: AgentHeaderProps) {
   const starCount = useGitHubStars();
 
   const starLabel = starCount === null ? null : starCount.toLocaleString("en-US");
@@ -54,13 +56,13 @@ function AgentHeader({ meta, rawOpen, onToggleRaw }: AgentHeaderProps) {
       <div className="agent-brand">
         <span className="agent-wordmark">RAGENT</span>
         <span className="agent-brand-sep">/</span>
-        <span className="agent-brand-tag">智能体</span>
+        <span className="agent-brand-tag">{supportWorkbench ? "ResolveOps" : "智能体"}</span>
       </div>
 
       <div className="agent-header-center">
         <span className="agent-badge">
           <span className="agent-dot" data-status={meta.status} aria-hidden="true" />
-          <span className="agent-badge-name">{badgeName}</span>
+          <span className="agent-badge-name">{supportWorkbench ? "Support workbench" : badgeName}</span>
         </span>
         {meta.status === "online" ? (
           <span className="agent-badge-model">{meta.meta.model || "未配模型"}</span>
@@ -84,7 +86,7 @@ function AgentHeader({ meta, rawOpen, onToggleRaw }: AgentHeaderProps) {
           <Github className="h-3.5 w-3.5" strokeWidth={1.5} />
           {starLabel ? <span className="agent-btn-glyph">{starLabel}</span> : null}
         </a>
-        <button
+        {supportWorkbench ? <Link className="agent-head-btn" to="/chat">Back to chat</Link> : <button
           type="button"
           className="agent-head-btn"
           data-on={rawOpen}
@@ -92,7 +94,7 @@ function AgentHeader({ meta, rawOpen, onToggleRaw }: AgentHeaderProps) {
           aria-pressed={rawOpen}
         >
           <span className="agent-btn-glyph">{"{ }"}</span> 原始帧
-        </button>
+        </button>}
       </div>
     </header>
   );
@@ -100,18 +102,21 @@ function AgentHeader({ meta, rawOpen, onToggleRaw }: AgentHeaderProps) {
 
 interface AgentLayoutProps {
   children: React.ReactNode;
+  sidebar?: React.ReactNode;
+  supportWorkbench?: boolean;
 }
 
-export function AgentLayout({ children }: AgentLayoutProps) {
+export function AgentLayout({ children, sidebar, supportWorkbench = false }: AgentLayoutProps) {
   const [rawOpen, setRawOpen] = React.useState(false);
   const meta = useAgentMeta();
 
   return (
-    <div className="agent-app">
-      <AgentHeader meta={meta} rawOpen={rawOpen} onToggleRaw={() => setRawOpen((v) => !v)} />
+    <div className={`agent-app${supportWorkbench ? " agent-app--support" : ""}`}>
+      <AgentHeader meta={meta} rawOpen={rawOpen} onToggleRaw={() => setRawOpen((v) => !v)} supportWorkbench={supportWorkbench} />
       <div className="agent-body">
-        <AgentSidebar />
-        <main className="agent-main">{children}</main>
+        {sidebar ?? <AgentSidebar />}
+        <main className={`agent-main${supportWorkbench ? " agent-main--support" : ""}`} lang={supportWorkbench ? "en" : undefined}
+          aria-label={supportWorkbench ? "Support workbench" : undefined} tabIndex={supportWorkbench ? 0 : undefined}>{children}</main>
         {rawOpen ? <AgentRawLog onClose={() => setRawOpen(false)} /> : null}
       </div>
     </div>
