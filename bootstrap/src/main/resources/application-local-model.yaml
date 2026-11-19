@@ -5,6 +5,13 @@ support:
   repair:
     enabled: ${RESOLVEOPS_REPAIR_ENABLED:false}
 
+rag:
+  rerank:
+    enabled: false
+  search:
+    evidence:
+      min-rerank-score: 0
+
 agent:
   chat:
     provider: ollama
@@ -22,6 +29,12 @@ agent:
     long-term-enabled: false
 
 ai:
+  rerank:
+    default-model: resolveops-local-rerank
+    candidates:
+      - id: resolveops-local-rerank
+        provider: noop
+        model: noop
   providers:
     ollama:
       url: http://127.0.0.1:11434

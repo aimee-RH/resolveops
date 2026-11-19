@@ -20,6 +20,9 @@ package com.nageoffer.ai.ragent.agent.support;
 import com.nageoffer.ai.ragent.agent.config.AgentProperties;
 import com.nageoffer.ai.ragent.infra.config.AIModelProperties;
 import com.nageoffer.ai.ragent.infra.model.ChatTierConfigValidator;
+import com.nageoffer.ai.ragent.rag.config.RAGConfigProperties;
+import com.nageoffer.ai.ragent.rag.config.SearchChannelProperties;
+import com.nageoffer.ai.ragent.rag.core.retrieval.postprocessor.EvidenceGatePostProcessor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -57,6 +60,8 @@ class LocalModelConfigurationTest {
         assertThat(agent.getChat().getReasoningEffort()).isEqualTo("low");
         assertThat(agent.getMaxConcurrentRunsPerUser()).isEqualTo(1);
         assertThat(ai.getProviders().get("ollama").getUrl()).isEqualTo("http://127.0.0.1:11434");
+        assertThat(binder.bind("rag.rerank.enabled", Boolean.class).get()).isFalse();
+        assertThat(ai.getRerank().getCandidates()).hasSize(1).allMatch(candidate -> candidate.getProvider().equals("noop"));
         assertThat(ai.getChat().getCandidates()).hasSize(2).allMatch(candidate -> candidate.getProvider().equals("ollama"));
         assertThat(ai.getChat().getTiers().get("fast").getCandidates()).containsExactly("resolveops-local");
         assertThat(ai.getChat().getTiers().get("standard").getCandidates()).containsExactly("resolveops-local");
@@ -64,5 +69,9 @@ class LocalModelConfigurationTest {
         assertThat(ai.getChat().getCandidates()).filteredOn(candidate -> candidate.getSupportsThinking())
                 .extracting(AIModelProperties.ModelCandidate::getModel).containsExactly("resolveops-qwen3:4b");
         new ChatTierConfigValidator(ai).afterPropertiesSet();
+        var rag = new RAGConfigProperties();
+        rag.setRerankEnabled(binder.bind("rag.rerank.enabled", Boolean.class).get());
+        var search = binder.bind("rag.search", SearchChannelProperties.class).get();
+        new EvidenceGatePostProcessor(search, rag).afterPropertiesSet();
     }
 }
