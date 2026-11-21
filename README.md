@@ -30,6 +30,7 @@ The local investigation checks use Llama 3.2 3B and PostgreSQL on synthetic case
 - [Human approval, execution and failure checks](docs/resolveops/REPAIR.md)
 - [API authorization investigation and checks](docs/resolveops/API_INVESTIGATION.md)
 - [Paired diagnosis evaluation and reproduction](docs/resolveops/EVALUATION.md)
+- [Stratified v2 evaluation with ablations, pass^k and confidence intervals](docs/resolveops/EVALUATION_V2.md)
 - [Green-light requirements](docs/resolveops/GREEN_LIGHTS.md)
 - [Actual verification status](docs/resolveops/STATUS.md)
 - [Owner walkthrough](docs/resolveops/WALKTHROUGH.md)
