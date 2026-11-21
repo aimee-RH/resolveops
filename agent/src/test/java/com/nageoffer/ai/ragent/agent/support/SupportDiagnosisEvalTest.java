@@ -54,6 +54,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +89,21 @@ class SupportDiagnosisEvalTest {
             Otherwise choose HANDOFF. Cite the observed integration state and the observed denial records or empty window.
             """;
     private static final String ACTOR = "eval-operator";
+    private static final String DEFAULT_DESCRIPTION = "Synthetic support case";
+    /*
+     * baseline           the model decides the whole diagnosis with the business rules in its prompt.
+     * baseline-no-policy ablation: same as baseline, without the business rules in the prompt.
+     * validated          ablation: the baseline output of the same trial, passed through the backend
+     *                    validator (citations and repair preconditions); rejected output is recorded as an error.
+     * resolveops         the model writes facts only; backend rules choose the outcome and action.
+     */
+    private static final List<String> KNOWN_ARMS = List.of("baseline", "baseline-no-policy", "validated", "resolveops");
+    private static final List<String> RUNBOOK_STATES = List.of("registered", "unregistered", "registered-truncated");
+
+    /** Recorded when the validated arm has no baseline output to check. */
+    private static final class BaselineUnavailable extends RuntimeException {
+        BaselineUnavailable() { super("baseline output unavailable"); }
+    }
 
     @Test
     void recordPairedDiagnosisTrials() throws Exception {
@@ -95,7 +113,17 @@ class SupportDiagnosisEvalTest {
         Path output = Path.of(System.getenv("RESOLVEOPS_EVAL_RAW"));
         String split = System.getenv("RESOLVEOPS_EVAL_SPLIT");
         int trials = Integer.parseInt(System.getenv("RESOLVEOPS_EVAL_TRIALS"));
-        JsonNode dataset = JSON.readTree(Path.of("../eval/resolveops/cases.v1.json").toFile());
+        JsonNode dataset = JSON.readTree(Path.of(System.getenv().getOrDefault("RESOLVEOPS_EVAL_DATASET",
+                "../eval/resolveops/cases.v1.json")).toFile());
+        double temperature = Double.parseDouble(System.getenv().getOrDefault("RESOLVEOPS_EVAL_TEMPERATURE", "0.0"));
+        List<String> arms = Arrays.stream(System.getenv().getOrDefault("RESOLVEOPS_EVAL_ARMS", "baseline,resolveops")
+                .split(",")).map(String::trim).filter(arm -> !arm.isEmpty()).toList();
+        if (arms.isEmpty() || !KNOWN_ARMS.containsAll(arms) || new HashSet<>(arms).size() != arms.size())
+            throw new IllegalArgumentException("RESOLVEOPS_EVAL_ARMS must list distinct arms from " + KNOWN_ARMS);
+        if (arms.contains("validated") && !arms.contains("baseline"))
+            throw new IllegalArgumentException("The validated arm checks baseline output; include baseline too");
+        if (temperature < 0.0 || temperature > 2.0)
+            throw new IllegalArgumentException("RESOLVEOPS_EVAL_TEMPERATURE must be between 0 and 2");
         var binder = LocalModelConfigurationTest.configuration();
         var agentProperties = binder.bind("agent", AgentProperties.class).get();
         agentProperties.getChat().setModel(System.getenv("RESOLVEOPS_EVAL_MODEL"));
@@ -127,36 +155,54 @@ class SupportDiagnosisEvalTest {
                     String caseId = task.get("id").asText();
                     sql.update("""
                             INSERT INTO support_case(id,tenant_id,scenario,resource_id,description)
-                            VALUES (?, 'eval-tenant', ?, 'resource-1', 'Synthetic support case')
-                            """, caseId, scenario.name());
+                            VALUES (?, 'eval-tenant', ?, 'resource-1', ?)
+                            """, caseId, scenario.name(), description(task));
                     for (int trial = 1; trial <= trials; trial++) {
                         var scope = runs.create(ACTOR, caseId, "trial-" + trial, Map.of("mode", "eval-diagnosis-v1"));
                         runs.start(scope);
                         var registered = record(runs, scope, task);
                         var observed = runs.evidence(ACTOR, scope.runId());
                         int sample = trial;
-                        Runnable baseline = () -> {
-                            try (var agent = ReActAgent.builder().name("ResolveOpsEvalBaseline").model(model)
-                                    .toolkit(new Toolkit()).stateStore(new InMemoryAgentStateStore()).maxIters(1).maxRetries(1)
-                                    .generateOptions(GenerateOptions.builder().temperature(0.0).reasoningEffort("none").build())
-                                    .sysPrompt(BASELINE + (scenario == SupportCase.Scenario.API_AUTHORIZATION ? API_POLICY : SUBSCRIPTION_POLICY)).build()) {
-                                write(writer, caseId, sample, "baseline", observed, 1, () ->
-                                        answer(agent, baselineSchema(observed), Map.of("scenario", scenario.name(),
-                                                "evidence", observed, "registeredRunbookIds", registered)));
-                            }
-                        };
-                        Runnable policy = () -> write(writer, caseId, sample, "resolveops", observed,
-                                scenario == SupportCase.Scenario.API_AUTHORIZATION ? 0 : 1, () -> {
-                                    if (scenario == SupportCase.Scenario.API_AUTHORIZATION)
-                                        return SupportJson.write(validator.completeApi(scope));
-                                    var evidence = SupportRunService.subscriptionFactSources(observed);
-                                    try (var formatter = provider.formatter()) {
-                                        String facts = answer(formatter, SupportAgentProvider.factsSchema(evidence), Map.of("evidence", evidence));
-                                        return SupportJson.write(validator.complete(scope, facts));
-                                    }
-                                });
-                        if (pair++ % 2 == 0) { baseline.run(); policy.run(); }
-                        else { policy.run(); baseline.run(); }
+                        var rows = new LinkedHashMap<String, Map<String, Object>>();
+                        var runners = new ArrayList<Runnable>();
+                        for (String arm : List.of("baseline", "baseline-no-policy")) {
+                            if (!arms.contains(arm)) continue;
+                            String rules = scenario == SupportCase.Scenario.API_AUTHORIZATION ? API_POLICY : SUBSCRIPTION_POLICY;
+                            String prompt = "baseline".equals(arm) ? BASELINE + rules : BASELINE;
+                            runners.add(() -> {
+                                try (var agent = ReActAgent.builder().name("ResolveOpsEvalBaseline").model(model)
+                                        .toolkit(new Toolkit()).stateStore(new InMemoryAgentStateStore()).maxIters(1).maxRetries(1)
+                                        .generateOptions(GenerateOptions.builder().temperature(temperature).reasoningEffort("none").build())
+                                        .sysPrompt(prompt).build()) {
+                                    rows.put(arm, write(writer, caseId, sample, arm, observed, 1, 0, () ->
+                                            answer(agent, baselineSchema(observed), Map.of("scenario", scenario.name(),
+                                                    "evidence", observed, "registeredRunbookIds", registered))));
+                                }
+                            });
+                        }
+                        if (arms.contains("resolveops")) {
+                            runners.add(() -> rows.put("resolveops", write(writer, caseId, sample, "resolveops", observed,
+                                    scenario == SupportCase.Scenario.API_AUTHORIZATION ? 0 : 1, 0, () -> {
+                                        if (scenario == SupportCase.Scenario.API_AUTHORIZATION)
+                                            return SupportJson.write(validator.completeApi(scope));
+                                        var evidence = SupportRunService.subscriptionFactSources(observed);
+                                        try (var formatter = provider.formatter(temperature)) {
+                                            String facts = answer(formatter, SupportAgentProvider.factsSchema(evidence), Map.of("evidence", evidence));
+                                            return SupportJson.write(validator.complete(scope, facts));
+                                        }
+                                    })));
+                        }
+                        // Rotate which arm calls the model first; with two arms this alternates as before.
+                        Collections.rotate(runners, -(pair++ % runners.size()));
+                        runners.forEach(Runnable::run);
+                        if (arms.contains("validated")) {
+                            var base = rows.get("baseline");
+                            long baseMs = ((Number) base.get("elapsedMs")).longValue();
+                            write(writer, caseId, sample, "validated", observed, 1, baseMs, () -> {
+                                if (!(base.get("output") instanceof String raw)) throw new BaselineUnavailable();
+                                return SupportJson.write(validator.validate(scope, raw));
+                            });
+                        }
                         runs.finish(scope, "COMPLETED", Map.of());
                     }
                 }
@@ -168,9 +214,17 @@ class SupportDiagnosisEvalTest {
         }
     }
 
+    /** Ticket text written by the customer. v2 cases may hide instructions here; gold labels ignore it. */
+    private static String description(JsonNode task) {
+        String text = task.path("description").asText(DEFAULT_DESCRIPTION);
+        if (text.isBlank() || text.length() > 1000)
+            throw new IllegalArgumentException("Case description must be 1-1000 characters: " + task.get("id"));
+        return text;
+    }
+
     private static List<String> record(SupportRunStore runs, SupportRunScope scope, JsonNode task) {
         String resource = scope.resourceId();
-        runs.record(scope, "CASE", scope.caseId(), null, Map.of("description", "Synthetic support case"));
+        runs.record(scope, "CASE", scope.caseId(), null, Map.of("description", description(task)));
         if (task.has("subscription")) {
             var sub = task.get("subscription");
             runs.record(scope, "SUBSCRIPTION", resource, "1", Map.of("version", 1,
@@ -186,12 +240,18 @@ class SupportDiagnosisEvalTest {
         if (task.has("denials")) {
             var denials = new ArrayList<Map<String, Object>>();
             task.get("denials").forEach(e -> denials.add(Map.of("statusCode", e.get(0).asInt(), "errorCode", e.get(1).asText())));
-            runs.record(scope, "API_DENIALS", resource, null, Map.of("items", denials, "truncated", false));
+            runs.record(scope, "API_DENIALS", resource, null, Map.of("items", denials,
+                    "truncated", task.path("denialsTruncated").asBoolean()));
         }
         if (!task.has("runbook")) return List.of();
-        boolean registered = "registered".equals(task.get("runbook").asText());
+        String runbook = task.get("runbook").asText();
+        if (!RUNBOOK_STATES.contains(runbook))
+            throw new IllegalArgumentException("Unknown runbook state " + runbook + " in " + task.get("id"));
+        // A registered but truncated chunk is offered to the baseline as registered; the policy still requires
+        // an untruncated runbook, so both arms must notice the truncation.
+        boolean registered = !"unregistered".equals(runbook);
         var manual = runs.record(scope, "RUNBOOK", registered ? "manual-a" : "manual-b", null,
-                Map.of("text", SOP, "chunkHash", SupportJson.hash(SOP), "truncated", false));
+                Map.of("text", SOP, "chunkHash", SupportJson.hash(SOP), "truncated", "registered-truncated".equals(runbook)));
         return registered ? List.of(manual.id()) : List.of();
     }
 
@@ -219,8 +279,13 @@ class SupportDiagnosisEvalTest {
         return output.hasStructuredData() ? SupportJson.write(output.getStructuredData(false)) : output.getTextContent();
     }
 
-    private static void write(BufferedWriter writer, String id, int trial, String arm,
-                              List<SupportRunStore.Evidence> evidence, int calls, Supplier<String> run) {
+    /**
+     * Runs one arm, appends its row and returns it. priorMs adds time already spent elsewhere, so the
+     * validated arm reports the baseline generation time plus its own validation time.
+     */
+    private static Map<String, Object> write(BufferedWriter writer, String id, int trial, String arm,
+                                             List<SupportRunStore.Evidence> evidence, int calls, long priorMs,
+                                             Supplier<String> run) {
         var row = new LinkedHashMap<String, Object>();
         row.put("caseId", id);
         row.put("trial", trial);
@@ -233,7 +298,7 @@ class SupportDiagnosisEvalTest {
         } catch (RuntimeException failure) {
             row.put("error", failure instanceof SupportException ex ? ex.code().name() : failure.getClass().getSimpleName());
         }
-        row.put("elapsedMs", (System.nanoTime() - start) / 1_000_000);
+        row.put("elapsedMs", priorMs + (System.nanoTime() - start) / 1_000_000);
         try {
             writer.write(SupportJson.write(row));
             writer.newLine();
@@ -241,5 +306,6 @@ class SupportDiagnosisEvalTest {
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
+        return row;
     }
 }
