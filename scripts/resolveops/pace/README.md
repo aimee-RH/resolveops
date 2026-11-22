@@ -16,7 +16,7 @@ module load anaconda3      # 如果 conda 已经可用可以跳过
 bash scripts/resolveops/pace/setup.sh
 ```
 
-会下载大约 8 GB 到 `~/scratch/resolveops-env`（没有 scratch 时放在 `~/resolveops-env`），包括 conda 环境、Ollama 0.40.13、llama3.2:3b、qwen3:4b 和 Maven 依赖。最后会跑 Python 单元测试和数据集冻结检查。重复运行是安全的，已完成的部分会跳过。
+会下载大约 8 GB 到 `~/scratch/resolveops-env`（没有 scratch 时放在 `~/resolveops-env`），包括 conda 环境、Ollama 0.40.13、llama3.2:3b 和 qwen3:4b，并尝试预下载 Maven 依赖。最后会跑 Python 单元测试和数据集冻结检查。重复运行是安全的，已完成的部分会跳过。
 
 ## 3. 提交评测作业
 
@@ -57,5 +57,5 @@ scp -r login-ice.pace.gatech.edu:resolveops/eval/results/v2-* eval/results/
 
 - PostgreSQL 在作业节点的本地临时目录里新建，监听 `127.0.0.1:55434`，用户名和密码都是 `postgres`（与评测代码一致），作业结束即删除。
 - Ollama 监听 `127.0.0.1:11434`（评测代码固定使用这个地址）。如果节点上这两个端口已被别人占用，作业会立即退出并提示重新提交。
-- Maven 以离线模式运行，依赖在第 2 步已经下载好，因为计算节点不一定能访问外网。
+- 登录节点限制单个用户的内存，完整编译可能被系统杀掉（日志里出现 `Killed`），所以第 2 步的 Maven 预下载只是尽力而为。作业开始时会在计算节点上联网编译一次并下载所有 Maven 依赖，之后各步以离线模式运行。如果计算节点不能联网，这一步会失败并给出提示。
 - 作业日志开头会打印 GPU 型号和 Ollama 检测到的计算设备；如果出现 `no compatible GPUs`，说明在用 CPU，会慢很多。

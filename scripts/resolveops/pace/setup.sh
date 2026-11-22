@@ -66,11 +66,15 @@ ol list
 kill "$pull_pid" 2>/dev/null || true
 trap - EXIT
 
-# 4. Maven dependencies, including the test runner, so the job can run offline.
-log "Compiling and warming the Maven cache"
-scripts/resolveops/check.sh -pl agent -am -DskipTests test-compile -q
-scripts/resolveops/check.sh -pl agent -am -Dtest=LocalModelConfigurationTest \
-  -Dsurefire.failIfNoSpecifiedTests=false test -q
+# 4. Maven dependencies. Login nodes cap memory per user and may kill a full compile, so this
+#    is best effort with a small heap; eval.sbatch compiles again on the compute node anyway.
+log "Warming the Maven cache (best effort)"
+if MAVEN_OPTS="-Xmx1g -XX:TieredStopAtLevel=1" scripts/resolveops/check.sh -T1 -pl agent -am \
+     -Dtest=LocalModelConfigurationTest -Dsurefire.failIfNoSpecifiedTests=false test -q; then
+  echo "Maven cache ready"
+else
+  echo "warning: Maven warm-up did not finish here; the job will compile and download on the compute node" >&2
+fi
 
 # 5. Scorer tests and dataset freeze check.
 log "Python tests"

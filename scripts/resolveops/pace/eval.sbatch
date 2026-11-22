@@ -59,6 +59,17 @@ curl -sf http://127.0.0.1:11434/api/version || { cat "$work/ollama.log"; exit 1;
 echo
 grep -i -m3 -E "inference compute|cuda|no compatible GPUs" "$work/ollama.log" || true
 
+# Compile and resolve every Maven plugin once, online, before the timed steps run offline.
+echo "== maven: compiling and resolving dependencies"
+if ! scripts/resolveops/check.sh -pl agent -am -Dtest=LocalModelConfigurationTest \
+     -Dsurefire.failIfNoSpecifiedTests=false test -q >"$work/maven-warmup.log" 2>&1; then
+  tail -40 "$work/maven-warmup.log"
+  echo "Maven warm-up failed; if it says it cannot reach repo.maven.apache.org, this node has no internet:" >&2
+  echo "run setup.sh again on a login node, then resubmit." >&2
+  exit 1
+fi
+echo "== maven: ready"
+
 run_step() {
   local name="$1"; shift
   local out="eval/results/v2-$name"
