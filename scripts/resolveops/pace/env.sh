@@ -7,5 +7,7 @@ export ROPS_ENV="$ROPS_BASE/conda"
 export ROPS_OLLAMA_DIR="$ROPS_BASE/ollama"
 export ROPS_OLLAMA_VERSION="${ROPS_OLLAMA_VERSION:-0.40.13}"
 export OLLAMA_MODELS="$ROPS_BASE/ollama-models"
+# Keep the Maven cache out of the small home quota.
+export RESOLVEOPS_MAVEN_REPO="${RESOLVEOPS_MAVEN_REPO:-$ROPS_BASE/maven}"
 export PATH="$ROPS_ENV/bin:$ROPS_OLLAMA_DIR/bin:$PATH"
 if [[ -d "$ROPS_ENV/lib/jvm" ]]; then export JAVA_HOME="$ROPS_ENV/lib/jvm"; else export JAVA_HOME="$ROPS_ENV"; fi

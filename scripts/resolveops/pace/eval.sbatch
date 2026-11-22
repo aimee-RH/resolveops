@@ -28,6 +28,16 @@ trials="${ROPS_TRIALS:-5}"
 echo "host $(hostname)  job ${SLURM_JOB_ID:-local}  commit $(git rev-parse --short HEAD)  steps $steps  trials $trials"
 nvidia-smi -L || echo "warning: no GPU visible; Ollama will run on CPU"
 
+# Results, Maven reports and target/ live in the repository. A full home quota silently stops the
+# trial writer (surefire then reports 0 tests and BUILD SUCCESS), so fail up front instead.
+mkdir -p eval/results
+if ! dd if=/dev/zero of=eval/results/.space-check bs=1M count=200 status=none 2>/dev/null; then
+  rm -f eval/results/.space-check
+  echo "Not enough disk quota for $(pwd) (need ~200 MB free). Check with: pace-quota" >&2
+  exit 1
+fi
+rm -f eval/results/.space-check
+
 work="${TMPDIR:-/tmp}/resolveops-$USER-${SLURM_JOB_ID:-$$}"
 mkdir -p "$work"
 cleanup() {
