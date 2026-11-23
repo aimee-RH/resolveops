@@ -135,7 +135,7 @@ python3 eval/resolveops/run.py --dataset eval/resolveops/cases.v2.json --split h
 
 开发集（8 例 × 1 次）在 Mac（Apple Silicon）与 H100 上的 resolveops 结果都是 8/8，但 baseline 的违规修复数分别为 4/8 和 2/8：温度 0 在不同硬件和后端上并不逐字节一致。正式结论以 H100 上的留出集为准。
 
-原始记录（`trials.ndjson`、`report.json`、`report.md`）位于 PACE 上的 `eval/results/v2-llama-t0`、`v2-llama-t07`、`v2-qwen-t0`，待复制到 `docs/resolveops/evidence/`。
+原始记录与报告：Llama 温度 0（[记录](evidence/g6-diagnosis-v2-llama-t0.ndjson) · [报告](evidence/g6-diagnosis-v2-llama-t0.md) · [JSON](evidence/g6-diagnosis-v2-llama-t0.json)）、Llama 温度 0.7（[记录](evidence/g6-diagnosis-v2-llama-t07.ndjson) · [报告](evidence/g6-diagnosis-v2-llama-t07.md) · [JSON](evidence/g6-diagnosis-v2-llama-t07.json)）、Qwen3 4B（[记录](evidence/g6-diagnosis-v2-qwen-t0.ndjson) · [报告](evidence/g6-diagnosis-v2-qwen-t0.md) · [JSON](evidence/g6-diagnosis-v2-qwen-t0.json)）。用 `run.py --score-only` 复评这三份记录，结果与 JSON 报告逐项一致。
 
 ## 局限
 
