@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import statistics
 import subprocess
+import sys
 from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -229,6 +230,21 @@ def markdown(report):
     return "\n".join(lines) + "\n"
 
 
+def read_rows(raw):
+    """One JSON record per '\\n'. str.splitlines() would also split on U+2028, U+0085 and similar
+    characters, which Jackson leaves unescaped inside model text. Non-JSON lines are reported and
+    skipped; summarize() still rejects any missing (case, trial, arm)."""
+    rows = []
+    for number, line in enumerate(raw.read_text(encoding="utf-8").split("\n"), 1):
+        if not line.strip(" \t\r\x00"):
+            continue
+        try:
+            rows.append(json.loads(line))
+        except json.JSONDecodeError as error:
+            print(f"warning: skipped non-JSON line {number} in {raw}: {error}; {line[:120]!r}", file=sys.stderr)
+    return rows
+
+
 def model_manifest(model):
     with urlopen("http://127.0.0.1:11434/api/tags", timeout=5) as response:
         entry = next((m for m in json.load(response)["models"] if m["name"] == model), None)
@@ -289,7 +305,7 @@ def main():
             cmd.insert(1, "-o")
         with (output / "maven.log").open("w") as log:
             subprocess.run(cmd, cwd=ROOT, env=env, stdout=log, stderr=subprocess.STDOUT, check=True)
-    rows = [json.loads(line) for line in raw.read_text().splitlines() if line.strip()]
+    rows = read_rows(raw)
     result = summarize(rows, cases, args.trials, args.arms)
     result.update(meta, datasetVersion=dataset["version"], datasetSha256=hashlib.sha256(data).hexdigest(),
                   split=args.split, caseCount=len(cases), trialsPerCase=args.trials, temperature=args.temperature)
