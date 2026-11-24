@@ -11,7 +11,7 @@ This file records checks, not planned capabilities.
 | G4 | GREEN (local PostgreSQL and HTTP) | Immutable proposal, separate approver, expiry, scoped rechecks, one verified repair receipt and atomic audit. Eight tests cover HTTP permissions, stale and revoked approvals, concurrency, lost responses and rollback. [Repair setup and checks](REPAIR.md) |
 | G5 | GREEN (local PostgreSQL and model probes) | Read-only API authorization investigation reuses the workbench, runs and evidence. PostgreSQL tests cover tenant and resource scope, safe projection, and incomplete data. Three local model probes cover 401, 403 and an empty window. [API investigation checks](API_INVESTIGATION.md) |
 | G6 | GREEN (local diagnosis evaluation) | Frozen synthetic split with 12 held-out cases, two trials per case and two paired arms. Baseline passed 2/24, ResolveOps passed 24/24, and disallowed repair suggestions were 9 vs 0. [Method, raw records and limitations](EVALUATION.md) |
-| G7 | PLANNED | Owner walkthrough, live workbench acceptance, user feedback and actual outcome metrics pending. |
+| G7 | BROWSER VERIFIED (local) | Normal Ragent login, two-role repair, read-only API triage and tenant isolation verified. [Reproduction steps and failure analyses](DEMO.md). Owner walkthrough, user feedback and user impact remain unverified. |
 
 ## Verification commands
 
@@ -27,10 +27,10 @@ npm run build
 
 ## Current limits
 
-- The workbench supports opt-in investigations and opt-in approval and repair. Full logged-in browser acceptance is pending.
+- The workbench supports opt-in investigations and opt-in approval and repair. The G7 browser demo uses synthetic cases and local services. No real user outcomes have been measured.
 - The support investigator uses its own four read tools and per-run state. General Ragent chat behavior is unchanged. Collection and evidence-only structured finalization reuse AgentScope's runtime.
 - The strict support runbook path currently supports the existing PG retriever only. General hybrid retrieval and fallback behavior are unchanged.
-- Domain and investigation tests use synthetic data and real PostgreSQL 17.11. The indexed probes additionally use real embeddings and pgvector 0.8.2. HTTP tests provide a trusted test login context. Full application login and workbench acceptance belong to G7.
+- Domain and investigation tests use synthetic data and real PostgreSQL 17.11. The indexed probes additionally use real embeddings and pgvector 0.8.2. HTTP tests supply a trusted test login context. [G7](DEMO.md) covers real application login separately.
 - The optional Docker image pull stalled locally and was interrupted. The Compose file was not verified by a successful container start; native PostgreSQL tests passed independently.
 - No production customer data, measured time saving, adoption, or real-model success rate is claimed.
 
@@ -56,4 +56,4 @@ The API investigator reads safe evidence for the current integration. The backen
 
 ## Paired diagnosis evaluation (2026-11-17)
 
-The Python scorer and opt-in Java runner completed 48 diagnosis trials on frozen, synthetic PostgreSQL evidence using local Llama 3.2 3B whenever a model was needed. The checks cover outcomes, action policy, citation provenance and coverage. G7 full browser acceptance remains open. [Evaluation results](EVALUATION.md)
+The Python scorer and opt-in Java runner completed 48 diagnosis trials on frozen, synthetic PostgreSQL evidence using local Llama 3.2 3B whenever a model was needed. The checks cover outcomes, action policy, citation provenance and coverage. [Evaluation results](EVALUATION.md)

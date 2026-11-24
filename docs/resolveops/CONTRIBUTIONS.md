@@ -9,7 +9,7 @@
 
 ## ResolveOps additions
 
-Implemented: support business data, resource authorization, case/run scope, bounded read tools, structured evidence, opt-in investigation submit/cancel, evidence-only fact writing, backend outcome rules and a polling support workbench. ResolveOps registers runbook policies by exact content hash and reuses Ragent's embedding and pgvector pipeline for live retrieval. The repair flow adds immutable proposals, a separate approver, transactional state changes and verified receipts. API authorization triage reuses the same workbench and lifecycle and adds scoped integration and denial evidence. Held-out evaluation is planned.
+Implemented: support business data, resource authorization, case/run scope, bounded read tools, structured evidence, opt-in investigation submit/cancel, evidence-only fact writing, backend outcome rules and a polling support workbench. ResolveOps registers runbook policies by exact content hash and reuses Ragent's embedding and pgvector pipeline for live retrieval. The repair flow adds immutable proposals, a separate approver, transactional state changes and verified receipts. API authorization triage reuses the same workbench and lifecycle and adds scoped integration and denial evidence. ResolveOps also adds the [held-out diagnosis evaluation](EVALUATION.md) and [reproducible workbench demo](DEMO.md).
 
 Only actual commits and verified behavior belong in completed resume claims. AI-assisted changes require the owner to reproduce and explain the critical path; commit authorship alone does not establish independent understanding.
 
